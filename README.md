@@ -4,3 +4,4 @@ nella pagina del repository cliccare su code, selezionare ssh e copiare la strin
 usare il comando: git clone stringaCopiata <br />
 docker engine => https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository <br />
 docker desktop (opzionale) (richiede docker engine) => https://docs.docker.com/desktop/install/ubuntu/ <br />
+bot telegram documentazione => https://docs.python-telegram-bot.org/en/v20.7/telegram.bot.html# <br />
