@@ -14,8 +14,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def register(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
-    request = requests.get("https://jsonplaceholder.typicode.com/todos/1")
-    await context.bot.send_message(chat_id=update.message.chat_id, text=f"User {user_id} registered!")
+    request = requests.get("http://127.0.0.1:5000/register",    {'user_id': user_id})
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token('6765515091:AAGSMzDzfw4f5zrrZ3FF8Lzboz5g2uUY9ZE').build()
