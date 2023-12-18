@@ -23,7 +23,7 @@ def update():
         api_call(city)
 
 def api_call(city: string):
-    api_key = "464c00ac0bbe3174a13b4ac72cdae20f"
+    api_key = ""
     data = requests.get('https://api.openweathermap.org/data/2.5/forecast?q='+city+'&appid='+api_key)
     collection = mongo.db.cities
     entry = collection.find_one({"city": city})

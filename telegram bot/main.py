@@ -3,6 +3,9 @@ import requests
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
 
+endpoint_register = "http://127.0.0.1:5000/register"
+token_bot = ""
+
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -17,10 +20,10 @@ async def register(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not cities:
         await context.bot.send_message(chat_id, text="Devi registrarti ad almeno una città")
     else:
-        requests.get("http://127.0.0.1:5000/register", {'chat_id': chat_id, 'cities[]': context.args})
+        requests.get(endpoint_register, {'id': chat_id, 'cities[]': context.args})
 
 if __name__ == '__main__':
-    application = ApplicationBuilder().token('6765515091:AAGSMzDzfw4f5zrrZ3FF8Lzboz5g2uUY9ZE').build()
+    application = ApplicationBuilder().token(token_bot).build()
     start_handler = CommandHandler('start', start)
     register_handler = CommandHandler('register', register)
     application.add_handler(start_handler)
