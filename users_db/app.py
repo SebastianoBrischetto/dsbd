@@ -3,7 +3,7 @@ from flask_pymongo import PyMongo
 
 app = Flask(__name__)
 
-#roba database da esportare in un'altro microservizio in futuro
+#database mongo
 app.config['MONGO_URI'] = 'mongodb://localhost:27017/weather_report_bot'
 mongo = PyMongo(app)
 collection = mongo.db.users
@@ -35,6 +35,28 @@ def all_cities():
     if data:
         return jsonify(data)
     return abort(404)
+
+#salvataggio utente
+#Parametri:
+# @id - identificatore utente
+# @cities - lista di citta da associare all'id
+@app.route('/save_user' , methods=['GET'])
+def save_user():
+    id = request.args.get('id')
+    cities = request.args.getlist('cities[]')
+    collection.insert_one({"id": id, "cities": cities})
+    return jsonify({"message": "richiesta effettuata con successo"})
+
+#aggiornamento utente
+#Parametri:
+# @id - identificatore utente
+# @cities - lista di citta da associare all'id
+@app.route('/update_user' , methods=['GET'])
+def update_user():
+    id = request.args.get('id')
+    cities = request.args.getlist('cities[]')
+    collection.update_one({"id": id}, { "$set": { 'cities': cities } })
+    return jsonify({"message": "richiesta effettuata con successo"})
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

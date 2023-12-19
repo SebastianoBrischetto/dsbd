@@ -1,16 +1,10 @@
 import requests
 from flask import Flask, request, jsonify, abort
-from flask_pymongo import PyMongo
 
 app = Flask(__name__)
 
 #endpoint lista citta, spostare tramite nginx
-endpoint_user_cities = "http://127.0.0.1:3000/cities"
-
-#roba database da esportare in un'altro microservizio in futuro
-app.config['MONGO_URI'] = 'mongodb://localhost:27017/weather_report_bot'
-mongo = PyMongo(app)
-collection = mongo.db.users
+endpoint_user_db = "http://127.0.0.1:3000/"
 
 #Associa l'utente alle citta richieste
 #Parametri:
@@ -22,7 +16,7 @@ def register():
     new_cities = request.args.getlist('cities[]')
     if id is None or not new_cities:
         return abort(400)
-    response = requests.get(endpoint_user_cities,{"id" : id})
+    response = requests.get(endpoint_user_db+"cities",{"id" : id})
     if response.status_code == 200:
         old_cities = response.json()
         cities_to_save = old_cities + list(set(new_cities) - set(old_cities))
@@ -35,16 +29,18 @@ def register():
     #return jsonify(response_notification.json())
     return jsonify({"id":id, "cities": cities_to_save, "update": update})
 
-#Salva i parametri nel database, spostare in un microservizio di scrittura sul db
+#esegue la chiamata per poter salvare/aggiornare
 #Parametri:
 # @id - identificatore utente
 # @cities_to_save - lista di citta da associare all'id
 # @update - booleano per capire se inserire o aggiornare dal db
 def save_to_db(id, cities_to_save:list, update:bool):
+    params = {"id" : id, "cities[]": cities_to_save}
     if update:
-        collection.update_one({"id": id}, { "$set": { 'cities': cities_to_save } })
+        response = requests.get(endpoint_user_db+"update_user", params)
     else:
-        collection.insert_one({"id": id, "cities": cities_to_save})
+        response = requests.get(endpoint_user_db+"save_user", params)
+    return response
     
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
