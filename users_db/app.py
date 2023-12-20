@@ -58,5 +58,15 @@ def update_user():
     collection.update_one({"id": id}, { "$set": { 'cities': cities } })
     return jsonify({"message": "richiesta effettuata con successo"})
 
+@app.route('/list_user' , methods=['GET'])
+def list_user():
+    cities = request.args.get('cities')
+    id = request.args.get('users[]')
+    data = collection.find({"cities": cities})
+    print(data)
+    return jsonify({data["id"]})
+
+
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
