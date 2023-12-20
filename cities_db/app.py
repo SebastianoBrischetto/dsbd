@@ -8,9 +8,9 @@ app.config['MONGO_URI'] = 'mongodb://localhost:27017/weather_report_bot'
 mongo = PyMongo(app)
 collection = mongo.db.cities
 
-#recupera la lista delle citta associate ad un utente se viene passato un id, in caso di assenza ritorna la lista delle citta che vanno tracciate
+#recupera i dati relativi ad una citta
 #Parametri:
-# @id -identificatore utente
+# @city - nome citta
 @app.route('/cities' , methods=['GET'])
 def cities():
     city = request.args.get('city')
@@ -20,14 +20,30 @@ def cities():
         response = abort(400)
     return response
 
-#ritorna le citta a cui un id e associato
+#recupera i dati relativi ad una citta
 #Parametri:
-# @id -identificatore utente
+# @city - nome citta
 def city_weather(city):
-    data = collection.find_one({"city" : city})
+    data = collection.find_one({"city.name" : city})
     if data:
-        return jsonify(data["data"])
+        return jsonify(data["weather_data"])
     return abort(404)
+
+@app.route('/save_weather_data' , methods=['POST'])
+def save_weather_data():
+    data = request.get_json()
+    if not data:
+        return abort(400)
+    collection.insert_one(data)
+    return jsonify({"message": "richiesta effettuata con successo"})
+
+@app.route('/update_weather_data' , methods=['POST'])
+def update_weather_data():
+    data = request.get_json()
+    if not data:
+        return abort(400)
+    collection.update_one({"city.name" : data["city"]["name"]}, { "$set": { 'weather_data': data["weather_data"] } })
+    return jsonify({"message": "richiesta effettuata con successo"})
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
