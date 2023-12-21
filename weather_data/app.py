@@ -16,13 +16,6 @@ app.config['MONGO_URI'] = 'mongodb://localhost:27017/weather_report_bot'
 mongo = PyMongo(app)
 collection = mongo.db.cities
 
-#Mostra il contenuto della collection cities
-@app.route('/')
-def index():
-    update()
-    cursor = collection.find()
-    return render_template('index.html', cursor=cursor)
-
 #effettua una chiamata al servizio meteo per ognuna delle citta di cui tenere traccia
 def update():
     response = requests.get(endpoint_cities)
