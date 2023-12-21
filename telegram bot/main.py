@@ -16,11 +16,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def register(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.message.from_user.id
-    cities = context.args
-    if not cities:
-        await context.bot.send_message(chat_id, text="Devi registrarti ad almeno una città")
+    data = context.args
+    if not data or len(context.args)>3:
+        await context.bot.send_message(chat_id, text="Formato registrazione errato /register <città> <tipo_controllo> <condizione> <valore>")
     else:
-        requests.get(endpoint_register, {'id': chat_id, 'cities[]': context.args})
+        requests.get(endpoint_register, {'id': chat_id, 'data[]': context.args})
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(token_bot).build()
