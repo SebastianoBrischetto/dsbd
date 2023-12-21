@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, abort
 from flask_pymongo import PyMongo
+import json
 
 app = Flask(__name__)
 
@@ -61,10 +62,15 @@ def update_user():
 @app.route('/list_user' , methods=['GET'])
 def list_user():
     cities = request.args.get('cities')
-    id = request.args.get('users[]')
     data = collection.find({"cities": cities})
-    print(data)
-    return jsonify({data["id"]})
+    for document in data:
+        id = document.get("id")
+        if id is not None:
+                result_json = json.dumps({ "id": id })
+                print(result_json)        
+    return jsonify({"message": "richiesta effettuata con successo"})
+    
+   
 
 
 
