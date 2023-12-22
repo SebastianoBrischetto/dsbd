@@ -1,6 +1,6 @@
 import time
 
-from flask import Flask, abort
+from flask import Flask
 import requests
 
 app = Flask(__name__)
