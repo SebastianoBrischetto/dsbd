@@ -10,7 +10,6 @@ COPY . .
 # Install any needed packages specified in requirements.txt
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install Flask --upgrade
 
 # Make port 80 available to the world outside this container
 EXPOSE 80
@@ -19,4 +18,4 @@ EXPOSE 80
 ENV NAME World
 
 # Run script.py when the container launches
-CMD ["python", "./app.py"]
+CMD ["python", "./main.py"]

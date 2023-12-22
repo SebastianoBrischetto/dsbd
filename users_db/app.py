@@ -5,7 +5,7 @@ import json
 app = Flask(__name__)
 
 #database mongo
-app.config['MONGO_URI'] = 'mongodb://localhost:27017/weather_report_bot'
+app.config['MONGO_URI'] = 'mongodb://root:password@mongo_db:27017/weather_report_db?authSource=admin&authMechanism=SCRAM-SHA-256'
 mongo = PyMongo(app)
 collection = mongo.db.users
 

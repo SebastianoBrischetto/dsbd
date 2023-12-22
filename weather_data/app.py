@@ -1,27 +1,18 @@
 import requests
 import string
-import schedule
-import time
-from flask import Flask, request, render_template
+from flask import Flask
 from flask_pymongo import PyMongo
 
 app = Flask(__name__)
 api_key = ""
 
 #endpoint lista citta, spostare tramite nginx
-endpoint_cities = "http://127.0.0.1:3000/cities"
+endpoint_cities = "http://cities:5000/cities"
 
 #roba database da esportare in un'altro microservizio in futuro
-app.config['MONGO_URI'] = 'mongodb://localhost:27017/weather_report_bot'
+app.config['MONGO_URI'] = 'mongodb://mongo_db:27017/weather_report_db'
 mongo = PyMongo(app)
 collection = mongo.db.cities
-
-#Mostra il contenuto della collection cities
-@app.route('/')
-def index():
-    update()
-    cursor = collection.find()
-    return render_template('index.html', cursor=cursor)
 
 #effettua una chiamata al servizio meteo per ognuna delle citta di cui tenere traccia
 def update():
