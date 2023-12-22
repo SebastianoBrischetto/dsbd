@@ -72,11 +72,13 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: password
-      MONGO_INITDB_DATABASE: weather_report_bot
+      MONGO_INITDB_DATABASE: weather_report_db
     volumes:
-      - ./data:/data/db
+      - Mongodb:/data/db
     networks:
       - mynetwork
+volumes:
+   Mongodb:
 networks:
   mynetwork:
     driver: bridge

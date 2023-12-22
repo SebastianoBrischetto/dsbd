@@ -4,7 +4,7 @@ from flask import Flask, request, abort, jsonify
 app = Flask(__name__)
 
 #endpoint lista citta, spostare tramite nginx
-endpoint_cities_db = "http://127.0.0.1:5000/"
+endpoint_cities_db = "http://cities_db:5000/"
 
 #formatta i dati ricevuti prima di inserirli nel db
 @app.route('/format_data', methods=['POST'])

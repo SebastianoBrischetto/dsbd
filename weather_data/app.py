@@ -7,10 +7,10 @@ app = Flask(__name__)
 api_key = ""
 
 #endpoint lista citta, spostare tramite nginx
-endpoint_cities = "http://127.0.0.1:3000/cities"
+endpoint_cities = "http://cities:5000/cities"
 
 #roba database da esportare in un'altro microservizio in futuro
-app.config['MONGO_URI'] = 'mongodb://localhost:27017/weather_report_bot'
+app.config['MONGO_URI'] = 'mongodb://mongo_db:27017/weather_report_db'
 mongo = PyMongo(app)
 collection = mongo.db.cities
 
