@@ -1,7 +1,7 @@
 import requests
 import string
-import schedule
-import time
+#import schedule
+#import time
 from flask import Flask, request, render_template
 from flask_pymongo import PyMongo
 
