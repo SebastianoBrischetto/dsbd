@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
 
 endpoint_register = "http://127.0.0.1:5000/register"
-token_bot = ""
+token_bot = "6765515091:AAGSMzDzfw4f5zrrZ3FF8Lzboz5g2uUY9ZE"
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',

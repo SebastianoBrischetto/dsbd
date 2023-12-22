@@ -1,7 +1,82 @@
-version: "2"
+version: '3'
+
 services:
-  app:
-    build: .
+  telegram_bot:
+    build: 
+      context: ./telegram_bot
+      dockerfile: Dockerfile
+    container_name: weather_report_telegram_bot
     ports:
-      - "5000:5000"
-    
+      - "5001:5000"
+    networks:
+      - mynetwork
+  register:
+    build: 
+      context: ./register
+      dockerfile: Dockerfile
+    container_name: weather_report_register
+    ports:
+      - "5002:5000"
+    networks:
+      - mynetwork
+  register_form:
+    build: 
+      context: ./register_form
+      dockerfile: Dockerfile
+    container_name: weather_report_register_form
+    ports:
+      - "5003:5000"
+    networks:
+      - mynetwork
+  users_db:
+    build: 
+      context: ./users_db
+      dockerfile: Dockerfile
+    container_name: weather_report_users_db
+    ports:
+      - "5004:5000"
+    networks:
+      - mynetwork
+  weather_data:
+    build: 
+      context: ./weather_data
+      dockerfile: Dockerfile
+    container_name: weather_report_weather_data
+    ports:
+      - "5005:5000"
+    networks:
+      - mynetwork
+  data_formatter:
+    build: 
+      context: ./data_formatter
+      dockerfile: Dockerfile
+    container_name: weather_report_data_formatter
+    ports:
+      - "5006:5000"
+    networks:
+      - mynetwork
+  cities_db:
+    build: 
+      context: ./cities_db
+      dockerfile: Dockerfile
+    container_name: weather_report_cities_db
+    ports:
+      - "5007:5000"
+    networks:
+      - mynetwork
+  mongo_db:
+    image: mongo:latest
+    container_name: weather_report_mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: weather_report_bot
+    volumes:
+      - ./data:/data/db
+    networks:
+      - mynetwork
+networks:
+  mynetwork:
+    driver: bridge
