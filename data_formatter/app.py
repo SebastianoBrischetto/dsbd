@@ -16,7 +16,7 @@ def format_data():
     save_to_db(formatted_data)
     return jsonify({"message": "richiesta effettuata con successo"})
 
-def save_to_db(data, update):
+def save_to_db(data):
     headers = {'Content-Type': 'application/json'}
     response = requests.get(endpoint_cities_db+"cities",{"city" : data["city"]["name"]})
     if response.status_code == 200:
