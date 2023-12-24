@@ -23,14 +23,14 @@ bot telegram documentazione => https://docs.python-telegram-bot.org/en/v20.7/tel
 <h2>Endpoints</h2>
 lista degli endpoint dopo aver lanciato il servizio tramite docker compose
 <h4>register</h4>
-http://localhost:5002/register?id=id_utente>&data[]=citta&data[]=tipo&data[]=condizione&data[]=valore
+<ul><li>http://localhost:5002/register?id=id_utente>&data[]=citta&data[]=tipo&data[]=condizione&data[]=valore</li></ul>
 <h4>register form</h4>
-http://localhost:5003/check_form?city=citta&type=tipo&condition=condizione&value=valore
+<ul><li>http://localhost:5003/check_form?city=citta&type=tipo&condition=condizione&value=valore</li></ul>
 <h4>user db</h4>
-http://localhost:5004/cities?id=id_utente
-http://localhost:5004/cities
-http://localhost:5004/list_user?city=citta
+<ul><li>http://localhost:5004/cities?id=id_utente</li>
+<li>http://localhost:5004/cities</li>
+<li>http://localhost:5004/list_user?city=citta</li></ul>
 <h4>weather data</h4>
-http://localhost:5005/force_update
+<ul><li>http://localhost:5005/force_update</li></ul>
 <h4>cities db</h4>
-http://localhost:5007/cities?city=citta
+<ul><li>http://localhost:5007/cities?city=citta</li></ul>
