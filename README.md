@@ -20,3 +20,17 @@ se possibile facciamo cosi in modo che prima di modificare/aggiungere codice tra
 docker engine => https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository <br />
 docker desktop (opzionale) (richiede docker engine) => https://docs.docker.com/desktop/install/ubuntu/ <br />
 bot telegram documentazione => https://docs.python-telegram-bot.org/en/v20.7/telegram.bot.html# <br />
+<h2>Endpoints</h2>
+lista degli endpoint dopo aver lanciato il servizio tramite docker compose
+<h4>register</h4>
+http://localhost:5002/register?id=id_utente>&data[]=citta&data[]=tipo&data[]=condizione&data[]=valore
+<h4>register form</h4>
+http://localhost:5003/check_form?city=citta&type=tipo&condition=condizione&value=valore
+<h4>user db</h4>
+http://localhost:5004/cities?id=id_utente
+http://localhost:5004/cities
+http://localhost:5004/list_user?city=citta
+<h4>weather data</h4>
+http://localhost:5005/force_update
+<h4>cities db</h4>
+http://localhost:5007/cities?city=citta
