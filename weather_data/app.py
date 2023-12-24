@@ -35,12 +35,13 @@ def push_data(data):  # Metodo per inviare i dati meteo al microservizio data_fo
     else:
         return False
 
+
 def update():
     cities = get_cities()
     errors = False
     if cities is not None:
         for city in cities:
-            res = push_data(get_data(city))  # Implementare il controllo sul ritorno della POST
+            res = push_data(get_data(city))
             if res is False:
                 errors = True
     else:

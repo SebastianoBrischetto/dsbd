@@ -4,10 +4,12 @@ import json
 
 app = Flask(__name__)
 
+
 #database mongo
 app.config['MONGO_URI'] = 'mongodb://root:password@mongo_db:27017/weather_report_db?authSource=admin&authMechanism=SCRAM-SHA-256'
 mongo = PyMongo(app)
 collection = mongo.db.users
+
 
 #recupera la lista dei parametri associati ad un utente se viene passato un id, in caso di assenza ritorna la lista delle citta che vanno tracciate
 #Parametri:
@@ -21,6 +23,7 @@ def cities():
         response = all_cities()
     return response
 
+
 #ritorna i parametri associati ad un id
 #Parametri:
 # @id -identificatore utente
@@ -30,12 +33,14 @@ def user_cities(id):
         return jsonify(data["cities"])
     return abort(404)
 
+
 #ritorna la lista delle citta che vanno tracciate
 def all_cities():
     data = collection.distinct('cities.city')
     if data:
         return jsonify(data)
     return abort(404)
+
 
 #salvataggio utente
 #Parametri:
@@ -48,6 +53,7 @@ def save_user():
     collection.insert_one({"id": id, "cities": [data]})
     return jsonify({"message": "richiesta effettuata con successo"})
 
+
 #aggiornamento utente
 #Parametri:
 # @id - identificatore utente
@@ -59,19 +65,29 @@ def update_user():
     collection.update_one({"id": id}, { "$push": { 'cities': {"$each": [data]} } })
     return jsonify({"message": "richiesta effettuata con successo"})
 
+
 @app.route('/list_user' , methods=['GET'])
 def list_user():
-    cities = request.args.get('cities')
-    data = collection.find({"cities": cities})
-    for document in data:
-        id = document.get("id")
-        if id is not None:
-                result_json = json.dumps({ "id": id })
-                print(result_json)        
-    return jsonify({"message": "richiesta effettuata con successo"})
-    
-   
-
+    city = request.args.get('city')
+    query = [
+        {"$match": {"cities": {"$elemMatch": {"city": city}}}}, #trova i documenti che contengono almeno una volta le condizioni relative alla citta richiesta
+        {"$project": { #recupera solo l'id e le condizioni che appartengono alla citta richiesta (ignora le altre citta)
+                "id": 1,
+                "conditions": {
+                    "$filter": {
+                        "input": "$cities",
+                        "as": "city",
+                        "cond": {"$eq": ["$$city.city", city]}
+                    }
+                }
+            }
+        }
+    ]
+    response = collection.aggregate(query)
+    data = []
+    for document in response:
+        data.append({"id": document['id'], 'conditions': document['conditions']})
+    return jsonify(data)
 
 
 if __name__ == '__main__':
