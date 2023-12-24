@@ -17,7 +17,7 @@ def register():
     data = request.args.getlist('data[]')
     if id is None or not data:
         return abort(400)
-    params = {"city": data[0], "type": data[1], "condition": data[2], "value": data[3]}
+    params = {"city": data[0].lower(), "type": data[1], "condition": data[2], "value": data[3]}
     response = requests.get(endpoint_register_form+"check_form", params)
     if response.status_code != 200:
         return abort(400)

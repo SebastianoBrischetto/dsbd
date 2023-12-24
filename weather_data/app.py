@@ -21,8 +21,10 @@ def get_cities():  # Metodo per ottenere le città delle quali vogliamo conoscer
 def get_data(city):  # Metodo per ottenere i dati meteo di una data città
     response = requests.get('https://api.openweathermap.org/data/2.5/forecast',
                             {"q": city, "appid": app.config['API_KEY']})
+    data = response.json()
+    data['city']['name'] = city
     if response.status_code == 200:
-        return response.json()
+        return data
     else:
         return None
 
