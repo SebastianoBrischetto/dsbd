@@ -1,6 +1,23 @@
 version: '3'
 
 services:
+  nginx:
+    image: nginx:latest
+    container_name: weather_report_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - telegram_bot
+      - register
+      - register_form
+      - users_db
+      - weather_data
+      - data_formatter
+      - cities_db
+    networks:
+      - mynetwork
   telegram_bot:
     build: 
       context: ./telegram_bot
@@ -82,3 +99,4 @@ volumes:
 networks:
   mynetwork:
     driver: bridge
+ 
