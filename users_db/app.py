@@ -79,7 +79,7 @@ def remove_city():
     if result.deleted_count == 1:
         print("Elemento correttamente eliminato: ")
         print(status)
-        return
+        return status
     else:
         print("Errore durante la rimozione della città")
         print(status)

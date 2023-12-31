@@ -30,7 +30,8 @@ async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not city:
         await context.bot.send_message(chat_id, text="Formato comando errato: indica la città di cui non vuoi ricevere più aggiornamenti")
     else:
-        requests.get(endpoint_remove, {'id': chat_id, 'city': context.args})
+        response=requests.get(endpoint_remove, {'id': chat_id, 'city': context.args})
+        print(response.url)
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(token_bot).build()
