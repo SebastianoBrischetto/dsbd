@@ -1,11 +1,10 @@
 import requests
+import os
 from flask import Flask, request, jsonify, abort
 
 app = Flask(__name__)
-
-#endpoints
-endpoint_users_db = "http://users_db:5000/"
-endpoint_register_form = "http://register_form:5000/"
+app.config["users_db"] = os.environ.get('API_GATEWAY' + "users_db/", 'http://users_db:5000/')
+app.config["register_form"] = os.environ.get('API_GATEWAY' + "register_form/", "http://register_form:5000/")
 
 #Associa l'utente alle citta richieste
 #Parametri:
@@ -18,7 +17,7 @@ def register():
     if id is None or not data:
         return abort(400)
     params = {"city": data[0].lower(), "type": data[1], "condition": data[2], "value": data[3]}
-    response = requests.get(endpoint_register_form+"check_form", params)
+    response = requests.get(app.config["register_form"]+"check_form", params)
     if response.status_code != 200:
         return abort(400)
     save_to_db(id, params)
@@ -31,13 +30,13 @@ def register():
 # @id - identificatore utente
 # @params - lista di parametri da associare all'id per il tracciamento
 def save_to_db(id, params):
-    response = requests.get(endpoint_users_db+"cities",{"id" : id})
+    response = requests.get(app.config["users_db"]+"cities",{"id" : id})
     headers = {'Content-Type': 'application/json'}
     json = dict({"id" : id}, **params)
     if response.status_code == 200:
-        requests.post(endpoint_users_db+"update_user", headers=headers, json=json)
+        requests.post(app.config["users_db"]+"update_user", headers=headers, json=json)
     else:
-        requests.post(endpoint_users_db+"save_user", headers=headers, json=json)
+        requests.post(app.config["users_db"]+"save_user", headers=headers, json=json)
     
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

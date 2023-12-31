@@ -1,8 +1,11 @@
 import requests
+import os
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 app.config['telegram_bot'] = "https://api.telegram.org/bot6765515091:AAGSMzDzfw4f5zrrZ3FF8Lzboz5g2uUY9ZE/"
+app.config['users_db'] = os.environ.get('API_GATEWAY' + "users_db/", 'http://users_db:5000/')
+app.config['cities_db'] =  os.environ.get('API_GATEWAY' + "cities_db/", 'http://cities_db:5000/')
 
 type_mapping = {
     "temperatura": "feels_like",
@@ -17,18 +20,14 @@ taxonomy_mapping = {
     "speed": "wind",
 }
 
-#database mongo
-app.config['users_db_url'] = "http://users_db:5000/"
-app.config['cities_db_url'] = "http://cities_db:5000/"
-
 #notifica gli utenti registrati alla citta quando si verificano le condizioni
 #Parametri:
 # @city - nome citta
 @app.route('/notify' , methods=['GET'])
 def check_city():
     city = request.args.get("city").lower()
-    user_conditions_list = requests.get(app.config['users_db_url']+"list_user", {"city": city}).json()[0]
-    city_weather_data = requests.get(app.config['cities_db_url']+"cities", {"city": city}).json()
+    user_conditions_list = requests.get(app.config['users_db']+"list_user", {"city": city}).json()[0]
+    city_weather_data = requests.get(app.config['cities_db']+"cities", {"city": city}).json()
     notifies = []
     for condition in user_conditions_list['conditions']:
         type = type_mapping[condition["type"]]

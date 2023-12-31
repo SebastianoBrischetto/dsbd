@@ -2,8 +2,6 @@ from flask import Flask, request, jsonify, abort
 from flask_pymongo import PyMongo
 
 app = Flask(__name__)
-
-#database mongo
 app.config['MONGO_URI'] = 'mongodb://root:password@mongo_db:27017/weather_report_db?authSource=admin&authMechanism=SCRAM-SHA-256'
 mongo = PyMongo(app)
 collection = mongo.db.cities

@@ -1,9 +1,10 @@
 import logging
 import requests
+import os
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
 
-endpoint_register = "http://register:5000/register"
+register_service = os.environ.get('API_GATEWAY' + "register/", 'http://register:5000/')
 token_bot = "6765515091:AAGSMzDzfw4f5zrrZ3FF8Lzboz5g2uUY9ZE"
 
 logging.basicConfig(
@@ -20,7 +21,7 @@ async def register(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not data or len(context.args)!=4:
         await context.bot.send_message(chat_id, text="Formato registrazione errato /register <città> <tipo_controllo> <condizione> <valore>")
     else:
-        requests.get(endpoint_register, {'id': chat_id, 'data[]': context.args})
+        requests.get(register_service + "register", {'id': chat_id, 'data[]': context.args})
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(token_bot).build()
