@@ -1,6 +1,25 @@
 version: '3'
+x-common-env:
+  API_GATEWAY: http://api_gateway:80/
 
 services:
+  api_gateway:
+    build:
+      context: ./api_gateway
+      dockerfile: Dockerfile
+    container_name: weather_report_api_gateway
+    ports:
+      - "5000:80"
+    depends_on:
+      - telegram_bot
+      - register
+      - register_form
+      - users_db
+      - weather_data
+      - data_formatter
+      - cities_db
+    networks:
+      - mynetwork
   telegram_bot:
     build: 
       context: ./telegram_bot
@@ -82,3 +101,4 @@ volumes:
 networks:
   mynetwork:
     driver: bridge
+ 

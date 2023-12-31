@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify, abort
 from flask_pymongo import PyMongo
-import json
 
 app = Flask(__name__)
 

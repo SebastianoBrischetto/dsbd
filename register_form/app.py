@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify, abort
-from flask_pymongo import PyMongo
 
 app = Flask(__name__)
 types = ["temperatura", "umidità", "pressione", "vento"]
