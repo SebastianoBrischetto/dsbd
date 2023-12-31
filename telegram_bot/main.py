@@ -5,7 +5,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
 
 register_service = os.environ.get('API_GATEWAY' + "register/", 'http://register:5000/')
-endpoint_remove = "http://remove:5000/remove"
+remove_service = os.environ.get('API_GATEWAY' + "remove/", 'http://remove:5000/')
 token_bot = "6765515091:AAGSMzDzfw4f5zrrZ3FF8Lzboz5g2uUY9ZE"
 
 logging.basicConfig(
@@ -30,7 +30,7 @@ async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE): #cancella 
     if not city:
         await context.bot.send_message(chat_id, text="Formato comando errato: indica la città di cui non vuoi ricevere più aggiornamenti")
     else:
-        requests.get(endpoint_remove, {'id': chat_id, 'city': context.args})
+        requests.get(remove_service + "remove", {'id': chat_id, 'city': context.args})
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(token_bot).build()
@@ -41,4 +41,3 @@ if __name__ == '__main__':
     application.add_handler(register_handler)
     application.add_handler(remove_handler)
     application.run_polling()
-

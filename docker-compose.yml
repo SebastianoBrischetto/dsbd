@@ -89,7 +89,7 @@ services:
       dockerfile: Dockerfile
     container_name: weather_report_remove
     ports:
-      - "5009:5000"
+      - "5008:5000"
     networks:
       - mynetwork
   mongo_db:

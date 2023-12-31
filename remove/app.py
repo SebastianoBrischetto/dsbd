@@ -9,7 +9,7 @@ endpoint_users_db = "http://users_db:5000/"
 @app.route('/remove', methods=['GET'])
 def remove():
     id = request.args.get('id') #ID telegram dell'utente
-    city = request.args.get('city') #città scritta dall'utente
+    city = request.args.get('city').lower() #città scritta dall'utente
     if id is None:
         return abort(400)
     params = {"id":id, "city": city}
