@@ -40,7 +40,6 @@ def all_cities():
         return jsonify(data)
     return abort(404)
 
-
 #salvataggio utente
 #Parametri:
 # @id - identificatore utente
@@ -63,6 +62,28 @@ def update_user():
     id = data.pop("id",None)
     collection.update_one({"id": id}, { "$push": { 'cities': {"$each": [data]} } })
     return jsonify({"message": "richiesta effettuata con successo"})
+
+@app.route('/remove_city' , methods=['GET']) #param "city":x e "id":y
+def remove_city():
+    city = request.args.get('city')
+    id = request.args.get('id')
+
+    to_remove = {"cities.city": city,
+                 "id": id}
+
+    result = collection.delete_one(to_remove)
+    ack = result.acknowledged
+    raw_result = result.raw_result
+    status = {"acknowledged": ack,
+              "raw_result": raw_result}
+    if result.deleted_count == 1:
+        print("Elemento correttamente eliminato: ")
+        print(status)
+        return
+    else:
+        print("Errore durante la rimozione della città")
+        print(status)
+        return abort(400)
 
 
 @app.route('/list_user' , methods=['GET'])
