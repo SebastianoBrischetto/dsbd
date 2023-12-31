@@ -24,14 +24,13 @@ async def register(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         requests.get(register_service + "register", {'id': chat_id, 'data[]': context.args})
 
-async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE): #cancella registrazione ad una città
     chat_id = update.message.from_user.id
     city = context.args #nome della città da eliminare
     if not city:
         await context.bot.send_message(chat_id, text="Formato comando errato: indica la città di cui non vuoi ricevere più aggiornamenti")
     else:
-        response=requests.get(endpoint_remove, {'id': chat_id, 'city': context.args})
-        print(response.url)
+        requests.get(endpoint_remove, {'id': chat_id, 'city': context.args})
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(token_bot).build()

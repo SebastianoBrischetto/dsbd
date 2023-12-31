@@ -63,27 +63,21 @@ def update_user():
     collection.update_one({"id": id}, { "$push": { 'cities': {"$each": [data]} } })
     return jsonify({"message": "richiesta effettuata con successo"})
 
-@app.route('/remove_city' , methods=['GET']) #param "city":x e "id":y
+@app.route('/remove_city' , methods=['GET']) #elimina città "city" dall'utente "id"
 def remove_city():
     city = request.args.get('city')
     id = request.args.get('id')
 
-    to_remove = {"cities.city": city,
-                 "id": id}
+    result = collection.update_one(
+        {"id": id},
+        {"$pull": {"cities": {"city": city}}}
+    )
 
-    result = collection.delete_one(to_remove)
-    ack = result.acknowledged
-    raw_result = result.raw_result
-    status = {"acknowledged": ack,
-              "raw_result": raw_result}
-    if result.deleted_count == 1:
-        print("Elemento correttamente eliminato: ")
-        print(status)
-        return status
+    if result.acknowledged:
+        return jsonify({"message": "Eliminazione effettuata con successo"})
     else:
-        print("Errore durante la rimozione della città")
-        print(status)
         return abort(400)
+
 
 
 @app.route('/list_user' , methods=['GET'])
