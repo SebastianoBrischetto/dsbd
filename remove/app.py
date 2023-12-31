@@ -1,10 +1,12 @@
+import os
+
 import requests
 from flask import Flask, request, abort, jsonify
 
 app = Flask(__name__)
 
 #endpoints
-endpoint_users_db = "http://users_db:5000/"
+app.config["users_db"] = os.environ.get('API_GATEWAY' + "users_db/", 'http://users_db:5000/')
 
 @app.route('/remove', methods=['GET'])
 def remove():
@@ -13,7 +15,7 @@ def remove():
     if id is None:
         return abort(400)
     params = {"id":id, "city": city}
-    response = requests.get(endpoint_users_db + "remove_city", params)
+    response = requests.get(app.config["users_db"] + "remove_city", params)
     if response.status_code != 200:
         return abort(400)
     else:
