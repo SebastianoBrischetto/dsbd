@@ -6,8 +6,7 @@ from flask import Flask, request, abort, jsonify
 app = Flask(__name__)
 
 #endpoints
-app.config["users_db"] = os.environ.get('API_GATEWAY' + "users_db/", 'http://users_db:5000/')
-
+app.config["users_db"] = os.environ.get('API_GATEWAY') + "users_db/"
 @app.route('/remove', methods=['GET'])
 def remove():
     id = request.args.get('id') #ID telegram dell'utente

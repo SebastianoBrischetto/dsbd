@@ -3,8 +3,8 @@ import os
 from flask import Flask, request, jsonify, abort
 
 app = Flask(__name__)
-app.config["users_db"] = os.environ.get('API_GATEWAY' + "users_db/", 'http://users_db:5000/')
-app.config["register_form"] = os.environ.get('API_GATEWAY' + "register_form/", "http://register_form:5000/")
+app.config["users_db"] = os.environ.get('API_GATEWAY') + "users_db/"
+app.config["register_form"] = os.environ.get('API_GATEWAY') + "register_form/"
 
 #Associa l'utente alle citta richieste
 #Parametri:

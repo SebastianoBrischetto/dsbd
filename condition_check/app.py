@@ -4,8 +4,8 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 app.config['telegram_bot'] = "https://api.telegram.org/bot6765515091:AAGSMzDzfw4f5zrrZ3FF8Lzboz5g2uUY9ZE/"
-app.config['users_db'] = os.environ.get('API_GATEWAY' + "users_db/", 'http://users_db:5000/')
-app.config['cities_db'] =  os.environ.get('API_GATEWAY' + "cities_db/", 'http://cities_db:5000/')
+app.config['users_db'] = os.environ.get('API_GATEWAY') + "users_db/"
+app.config['cities_db'] =  os.environ.get('API_GATEWAY') + "cities_db/"
 
 type_mapping = {
     "temperatura": "feels_like",

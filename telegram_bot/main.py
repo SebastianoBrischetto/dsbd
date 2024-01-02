@@ -4,8 +4,8 @@ import os
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
 
-register_service = os.environ.get('API_GATEWAY' + "register/", 'http://register:5000/')
-remove_service = os.environ.get('API_GATEWAY' + "remove/", 'http://remove:5000/')
+register_service = os.environ.get('API_GATEWAY') + "register/"
+remove_service = os.environ.get('API_GATEWAY') + "remove/"
 token_bot = "6765515091:AAGSMzDzfw4f5zrrZ3FF8Lzboz5g2uUY9ZE"
 
 logging.basicConfig(

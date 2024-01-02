@@ -3,7 +3,7 @@ import os
 from flask import Flask, request, abort, jsonify
 
 app = Flask(__name__)
-app.config["cities_db"] = os.environ.get('API_GATEWAY' + "cities_db/", 'http://cities_db:5000/')
+app.config["cities_db"] = os.environ.get('API_GATEWAY') + "cities_db/"
 
 #formatta i dati ricevuti prima di inserirli nel db
 @app.route('/format_data', methods=['POST'])
@@ -18,6 +18,7 @@ def format_data():
 def save_to_db(data):
     headers = {'Content-Type': 'application/json'}
     response = requests.get(app.config["cities_db"]+"cities",{"city" : data["city"]["name"]})
+
     if response.status_code == 200:
         requests.post(app.config["cities_db"] + "update_weather_data", headers=headers, json=data)
     else:

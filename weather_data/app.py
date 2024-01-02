@@ -7,8 +7,8 @@ app = Flask(__name__)
 scheduler = APScheduler()
 
 app.config['API_KEY'] = "464c00ac0bbe3174a13b4ac72cdae20f"
-app.config['users_db'] = os.environ.get('API_GATEWAY' + "users_db/", 'http://users_db:5000/')
-app.config['data_formatter'] = os.environ.get('API_GATEWAY' + "data_formatter/", 'http://data_formatter:5000/')
+app.config['users_db'] = os.environ.get('API_GATEWAY') + "users_db/"
+app.config['data_formatter'] = os.environ.get('API_GATEWAY') + "data_formatter/"
 
 
 def get_cities():  # Metodo per ottenere le città delle quali vogliamo conoscere i dati meteo
