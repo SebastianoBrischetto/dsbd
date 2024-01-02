@@ -83,6 +83,15 @@ services:
       - "5007:5000"
     networks:
       - mynetwork
+  remove:
+    build:
+      context: ./remove
+      dockerfile: Dockerfile
+    container_name: weather_report_remove
+    ports:
+      - "5008:5000"
+    networks:
+      - mynetwork
   mongo_db:
     image: mongo:latest
     container_name: weather_report_mongodb
