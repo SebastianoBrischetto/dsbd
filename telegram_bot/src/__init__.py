@@ -1,0 +1,1 @@
+from .weatherbot import WeatherBot
