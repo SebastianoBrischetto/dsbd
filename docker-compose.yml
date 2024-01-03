@@ -3,6 +3,7 @@ version: '3'
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
+    container_name: weather_report_zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -14,6 +15,7 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:latest
+    container_name: weather_report_kafka
     depends_on:
       - zookeeper
     ports:
@@ -50,7 +52,7 @@ services:
 
   telegram_bot:
     build: 
-      context: ./telegram_bot
+      context: ./client_services/telegram_bot
       dockerfile: Dockerfile
     container_name: weather_report_telegram_bot
     ports:
@@ -62,7 +64,7 @@ services:
 
   register:
     build: 
-      context: ./register
+      context: ./user_interface_services/register
       dockerfile: Dockerfile
     container_name: weather_report_register
     ports:
@@ -74,7 +76,7 @@ services:
 
   register_form:
     build: 
-      context: ./register_form
+      context: ./user_interface_services/register_form
       dockerfile: Dockerfile
     container_name: weather_report_register_form
     ports:
@@ -84,7 +86,7 @@ services:
 
   users_db:
     build: 
-      context: ./users_db
+      context: ./db_services/users_db
       dockerfile: Dockerfile
     container_name: weather_report_users_db
     ports:
@@ -94,7 +96,7 @@ services:
 
   weather_data:
     build: 
-      context: ./weather_data
+      context: ./weather_data_acquisition_services/weather_data
       dockerfile: Dockerfile
     container_name: weather_report_weather_data
     ports:
@@ -106,7 +108,7 @@ services:
 
   data_formatter:
     build: 
-      context: ./data_formatter
+      context: ./weather_data_acquisition_services/data_formatter
       dockerfile: Dockerfile
     container_name: weather_report_data_formatter
     depends_on:
@@ -120,7 +122,7 @@ services:
 
   cities_db:
     build: 
-      context: ./cities_db
+      context: ./db_services/cities_db
       dockerfile: Dockerfile
     container_name: weather_report_cities_db
     ports:
@@ -130,7 +132,7 @@ services:
 
   remove:
     build:
-      context: ./remove
+      context: ./user_interface_services/remove
       dockerfile: Dockerfile
     container_name: weather_report_remove
     ports:
