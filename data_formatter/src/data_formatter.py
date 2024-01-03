@@ -9,7 +9,7 @@ class DataFormatter(Flask):
         # Endpoint
         self.config["cities_db"] = cities_db_endpoint
         # Routes
-        self.route('/format_data', methods=['GET'])(self.formatData)
+        self.route('/format_data', methods=['POST'])(self.formatData)
 
     # POST: Esegue la formattazione dei dati ricevuti e li salva nel db
     def formatData(self):

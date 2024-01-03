@@ -9,7 +9,7 @@ class UsersDb(Flask):
         # Config per connettersi a MongoDB
         self.config['MONGO_URI'] = mongo_endpoint
         self.mongo = PyMongo(self)
-        self.collection = self.mongo.db.cities
+        self.collection = self.mongo.db.users
 
         # Routes
         self.route('/cities', methods=['GET'])(self.cities)

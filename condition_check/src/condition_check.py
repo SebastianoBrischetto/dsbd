@@ -54,3 +54,4 @@ class ConditionCheck(Flask):
                     notifies.append({'user': user_conditions_list['id'], 'message': condition["type"]+" minore di "+condition['value']+" a "+ city +" per giorno "+city_weather_data_point["dt_txt"]})
         for notific in notifies:
             requests.get(self.config['telegram_bot'] + "sendMessage", {"chat_id":notific['user'], "text":notific['message']})
+        return jsonify(notifies)
