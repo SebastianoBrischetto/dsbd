@@ -1,8 +1,37 @@
 version: '3'
-x-common-env:
-  API_GATEWAY: http://api_gateway:80/
 
 services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: weather_report_zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      KAFKA_JMX_PORT: 9101
+    ports:
+      - "22181:2181"
+    networks:
+      - mynetwork
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: weather_report_kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_JMX_PORT: 9101
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - mynetwork
+      
   api_gateway:
     build:
       context: ./api_gateway
@@ -20,78 +49,113 @@ services:
       - cities_db
     networks:
       - mynetwork
+
   telegram_bot:
     build: 
-      context: ./telegram_bot
+      context: ./client_services/telegram_bot
       dockerfile: Dockerfile
     container_name: weather_report_telegram_bot
     ports:
       - "5001:5000"
     networks:
       - mynetwork
+    environment:
+    - API_GATEWAY=http://api_gateway:80/
+
   register:
     build: 
-      context: ./register
+      context: ./user_interface_services/register
       dockerfile: Dockerfile
     container_name: weather_report_register
     ports:
       - "5002:5000"
     networks:
       - mynetwork
+    environment:
+    - API_GATEWAY=http://api_gateway:80/
+
   register_form:
     build: 
-      context: ./register_form
+      context: ./user_interface_services/register_form
       dockerfile: Dockerfile
     container_name: weather_report_register_form
     ports:
       - "5003:5000"
     networks:
       - mynetwork
+
   users_db:
     build: 
-      context: ./users_db
+      context: ./db_services/users_db
       dockerfile: Dockerfile
     container_name: weather_report_users_db
     ports:
       - "5004:5000"
     networks:
       - mynetwork
+
   weather_data:
     build: 
-      context: ./weather_data
+      context: ./weather_data_acquisition_services/weather_data
       dockerfile: Dockerfile
     container_name: weather_report_weather_data
     ports:
       - "5005:5000"
     networks:
       - mynetwork
+    environment:
+    - API_GATEWAY=http://api_gateway:80/
+
   data_formatter:
     build: 
-      context: ./data_formatter
+      context: ./weather_data_acquisition_services/data_formatter
       dockerfile: Dockerfile
     container_name: weather_report_data_formatter
+    depends_on:
+      - kafka
     ports:
       - "5006:5000"
     networks:
       - mynetwork
+    environment:
+      - API_GATEWAY=http://api_gateway:80/
+
   cities_db:
     build: 
-      context: ./cities_db
+      context: ./db_services/cities_db
       dockerfile: Dockerfile
     container_name: weather_report_cities_db
     ports:
       - "5007:5000"
     networks:
       - mynetwork
+
   remove:
     build:
-      context: ./remove
+      context: ./user_interface_services/remove
       dockerfile: Dockerfile
     container_name: weather_report_remove
     ports:
       - "5008:5000"
     networks:
       - mynetwork
+    environment:
+    - API_GATEWAY=http://api_gateway:80/
+
+  condition_check:
+    build:
+      context: ./condition_check
+      dockerfile: Dockerfile
+    container_name: weather_report_condition_check
+    depends_on:
+      - kafka
+    ports:
+      - "5009:5000"
+    networks:
+      - mynetwork
+    environment:
+      - API_GATEWAY=http://api_gateway:80/
+
   mongo_db:
     image: mongo:latest
     container_name: weather_report_mongodb
@@ -105,9 +169,10 @@ services:
       - Mongodb:/data/db
     networks:
       - mynetwork
+
 volumes:
    Mongodb:
+
 networks:
   mynetwork:
     driver: bridge
- 
