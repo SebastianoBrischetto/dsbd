@@ -1,8 +1,8 @@
-import requests
+import requests, threading
 from flask import Flask, request, jsonify, abort
 
 class ConditionCheck(Flask):
-    def __init__(self, telegram_bot_endpoint, users_db_endpoint, cities_db_endpoint, *args, **kwargs):
+    def __init__(self, telegram_bot_endpoint, users_db_endpoint, cities_db_endpoint, kafka_consumer, *args, **kwargs):
         # Costruttore flask
         super().__init__(*args, **kwargs)
 
@@ -10,6 +10,11 @@ class ConditionCheck(Flask):
         self.config['telegram_bot'] = telegram_bot_endpoint
         self.config['users_db'] = users_db_endpoint
         self.config['cities_db'] =  cities_db_endpoint
+
+        # Kafka Consumer
+        self.kafka_consumer = kafka_consumer
+        kafka_thread = threading.Thread(target = self.kafka_consumer.consumeMessages)
+        kafka_thread.start()
 
         # Routes
         self.route('/notify', methods=['GET'])(self.notifyUsers)
