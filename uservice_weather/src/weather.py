@@ -17,13 +17,12 @@ class WeatherUService(Flask):
     - city_conditions_endpoint: Endpoint per recuperare le condizioni relative ad una citta.
     - args, kwargs: Argomenti per Flask.
     """
-    def __init__(self, api_key, db_endpoint, user_conditions_endpoint, city_conditions_endpoint, *args, **kwargs):
+    def __init__(self, api_key, db_endpoint, city_conditions_endpoint, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Configuration
         self.config['API_KEY'] = api_key
         self.config['api'] = "https://api.openweathermap.org/data/2.5/forecast"
-        self.config['user_conditions_endpoint'] = user_conditions_endpoint
         self.config['city_conditions_endpoint'] = city_conditions_endpoint
 
         # MongoDB configuration
@@ -48,7 +47,7 @@ class WeatherUService(Flask):
         # Kafka producer and consumer
         self.kafka_producer = KafkaProducer("PLAINTEXT://kafka:9092")
         self.kafka_consumer = KafkaConsumer('weather-consumer-group', 'new-city-topic', self.process_message, 'PLAINTEXT://kafka:9092')
-        kafka_thread = threading.Thread(target=self.kafka_consumer.consumeMessages)
+        kafka_thread = threading.Thread(target=self.kafka_consumer.consume_messages)
         kafka_thread.start()
 
         # Scheduler
@@ -59,14 +58,14 @@ class WeatherUService(Flask):
         # Routes
         self.route('/force_update', methods=['get'])(self.force_update_handler)
 
-    def process_message(self, message):
+    def process_message(self, city):
         """
         Processa un messaggio.
 
         Parameters:
-        - message: Messaggio ricevuto da Kafka.
+        - city: Nome citta ricevuto da Kafka.
         """
-        print(f"Processing message: {message}")
+        self._update_city(city)
 
     def _scheduled_update(self):
         """
@@ -88,25 +87,12 @@ class WeatherUService(Flask):
         """
         Aggiorna i dati meteo per le citta tracciate.
         """
-        cities = self._get_cities_to_update()
+        cities = self._db_read_cities_names()
         if cities is None:
             return False
         for city in cities:
             self._update_city(city)
         return True
-
-    def _get_cities_to_update(self):
-        """
-        Recupera le citta tracciate.
-
-        Returns:
-        - Lista delle citta tracciate o None se la richiesta fallisce.
-        """
-        response = requests.get(self.config['user_conditions_endpoint'])
-        if response.status_code == 200:
-            return response.json()
-        else:
-            return None
 
     def _update_city(self, city):
         data = self._format_api_data(self._get_weather_data_from_api(city))
@@ -224,3 +210,6 @@ class WeatherUService(Flask):
             return False
         self.collection.update_one({"city.name": data["city"]["name"]}, {"$set": {'weather_data': data["weather_data"]}})
         return True
+    
+    def _db_read_cities_names(self):
+        return self.collection.distinct('city.name')

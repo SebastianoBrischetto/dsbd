@@ -13,7 +13,7 @@ class KafkaConsumer:
         - on_message_callback: Callback alla funzione da eseguire alla ricezione di un messaggio.
         - bootstrap_servers: Server bootstrap di kafka.
         """
-        self.setupLogger()
+        self.setup_logger()
         self.consumer_config = {
             'bootstrap.servers': bootstrap_servers,
             'group.id': group_id,
@@ -24,13 +24,13 @@ class KafkaConsumer:
         self.consumer = None
         self.on_message_callback = on_message_callback
 
-        while not self.isKafkaReady():
+        while not self.is_kafka_ready():
             self.logger.info("Waiting for Kafka to be ready...")
             time.sleep(5)
 
         self.logger.info("Consumer ready to process messages.")
 
-    def setupLogger(self):
+    def setup_logger(self):
         """
         Configura il logger per la classe Kafka consumer.
         """
@@ -41,7 +41,7 @@ class KafkaConsumer:
         self.logger.addHandler(handler)
         self.logger.setLevel(logging.INFO)
 
-    def isKafkaReady(self):
+    def is_kafka_ready(self):
         """
         Controlla che kafka sia pronto.
 
@@ -56,7 +56,7 @@ class KafkaConsumer:
             self.logger.info(f"Kafka not ready: {e}")
             return False
 
-    def consumeMessages(self):
+    def consume_messages(self):
         """
         Consuma messaggi dal topic, esegue il callback e dopo aver processato commita.
         """
