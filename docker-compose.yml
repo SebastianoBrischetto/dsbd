@@ -31,133 +31,59 @@ services:
     networks:
       - mynetwork
       
-  api_gateway:
+  proxy:
     build:
-      context: ./api_gateway
+      context: ./proxy
       dockerfile: Dockerfile
-    container_name: weather_report_api_gateway
+    container_name: proxy
     ports:
       - "5000:80"
     depends_on:
-      - telegram_bot
-      - register
-      - register_form
-      - users_db
-      - weather_data
-      - data_formatter
-      - cities_db
+      - uservice_client
+      - uservice_user
+      - uservice_weather
     networks:
       - mynetwork
 
-  telegram_bot:
+  uservice_client:
     build: 
-      context: ./client_services/telegram_bot
+      context: ./uservice_client/telegram_bot
       dockerfile: Dockerfile
-    container_name: weather_report_telegram_bot
+    container_name: uservice_client
     ports:
       - "5001:5000"
     networks:
       - mynetwork
     environment:
-    - API_GATEWAY=http://api_gateway:80/
+    - REGISTER_USER=http://proxy:80/uservice_client/register
+    - REMOVE_USER=http://proxy:80/uservice_client/remove
 
-  register:
+  uservice_user:
     build: 
-      context: ./user_interface_services/register
+      context: ./uservice_user
       dockerfile: Dockerfile
-    container_name: weather_report_register
+    container_name: uservice_user
     ports:
       - "5002:5000"
     networks:
       - mynetwork
-    environment:
-    - API_GATEWAY=http://api_gateway:80/
 
-  register_form:
+  uservice_weather:
     build: 
-      context: ./user_interface_services/register_form
+      context: ./uservice_weather
       dockerfile: Dockerfile
-    container_name: weather_report_register_form
+    container_name: uservice_weather
     ports:
       - "5003:5000"
     networks:
       - mynetwork
-
-  users_db:
-    build: 
-      context: ./db_services/users_db
-      dockerfile: Dockerfile
-    container_name: weather_report_users_db
-    ports:
-      - "5004:5000"
-    networks:
-      - mynetwork
-
-  weather_data:
-    build: 
-      context: ./weather_data_acquisition_services/weather_data
-      dockerfile: Dockerfile
-    container_name: weather_report_weather_data
-    ports:
-      - "5005:5000"
-    networks:
-      - mynetwork
     environment:
-    - API_GATEWAY=http://api_gateway:80/
-
-  data_formatter:
-    build: 
-      context: ./weather_data_acquisition_services/data_formatter
-      dockerfile: Dockerfile
-    container_name: weather_report_data_formatter
-    depends_on:
-      - kafka
-    ports:
-      - "5006:5000"
-    networks:
-      - mynetwork
-    environment:
-      - API_GATEWAY=http://api_gateway:80/
-
-  cities_db:
-    build: 
-      context: ./db_services/cities_db
-      dockerfile: Dockerfile
-    container_name: weather_report_cities_db
-    ports:
-      - "5007:5000"
-    networks:
-      - mynetwork
-
-  remove:
-    build:
-      context: ./user_interface_services/remove
-      dockerfile: Dockerfile
-    container_name: weather_report_remove
-    ports:
-      - "5008:5000"
-    networks:
-      - mynetwork
-    environment:
-    - API_GATEWAY=http://api_gateway:80/
-
-  condition_check:
-    build:
-      context: ./condition_check
-      dockerfile: Dockerfile
-    container_name: weather_report_condition_check
-    depends_on:
-      - kafka
-    ports:
-      - "5009:5000"
-    networks:
-      - mynetwork
-    environment:
-      - API_GATEWAY=http://api_gateway:80/
+    - USER_CONDITIONS=http://proxy:80/uservice_client/user_conditions
+    - CITY_CONDITIONS=http://proxy:80/uservice_client/city_conditions
 
   mongo_db:
     image: mongo:latest
-    container_name: weather_report_mongodb
+    container_name: mongo_db
     ports:
       - "27017:27017"
     environment:
