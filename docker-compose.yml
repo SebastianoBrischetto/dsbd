@@ -82,7 +82,6 @@ services:
     networks:
       - mynetwork
     environment:
-    - USER_CONDITIONS=http://proxy:80/uservice_client/user_conditions
     - CITY_CONDITIONS=http://proxy:80/uservice_client/city_conditions
 
   mongo_db:
