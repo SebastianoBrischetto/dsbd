@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, abort
 from flask_pymongo import PyMongo
+from .kafka_producer import KafkaProducer
 
 class UserUService(Flask):
     """
@@ -30,6 +31,8 @@ class UserUService(Flask):
         self.mongo = PyMongo(self)
         self.collection = self.mongo.db.users
 
+        self.kafka_producer = KafkaProducer("PLAINTEXT://kafka:9092")
+
     def register_handler(self):
         """
         Gestisce la registrazione di un nuovo utente e il salvataggio delle condizioni.
@@ -42,8 +45,10 @@ class UserUService(Flask):
         params = {"city": data[0].lower(), "condition_type": data[1], "operator": data[2], "value": data[3]}
         if not self._check_form(**params):
             return abort(400)
-        
+
         data = dict({"id": user_id}, **params)
+        if params["city"] not in self._db_read_all_users_conditions():
+            self.kafka_producer.produce_message('new-city-topic', 'city', params["city"])
         self._save_to_db(data)
         return jsonify(data)
 
@@ -54,31 +59,20 @@ class UserUService(Flask):
         Parameters:
             - data (dict): Dati da salvare.
         """
-        if self._get_conditions(data["id"]):
+        if self._db_read_user_conditions(data["id"]):
             self._db_update_user(data)
         else:
             self._db_create_user(data)
-
-    def _get_conditions(self, user_id=None):
-        """
-        Recupera le condizioni di un singolo utente o di tutti gli utenti in base alla presenza di un user_id.
-
-        Parameters:
-            - user_id (str): ID utente.
-
-        Returns:
-            - list: Lista delle condizioni.
-        """
-        if user_id:
-            return self._db_read_user_conditions(user_id)
-        return self._db_read_all_users_conditions()
 
     def get_conditions_handler(self):
         """
         Gestisce le richieste per il recupero delle condizioni.
         """
         user_id = request.args.get('id')
-        data = self._get_conditions(user_id)
+        if user_id:
+            data = self._db_read_user_conditions(user_id)
+        else:
+            data = self._db_read_all_users_conditions()
         return jsonify(data)
 
     def _check_form(self, city, condition_type, operator, value):
