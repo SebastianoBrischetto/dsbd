@@ -1,25 +1,37 @@
 from flask import Flask, jsonify, abort
 from flask_apscheduler import APScheduler
 from flask_pymongo import PyMongo
-import requests, threading
+from .kafka_consumer import KafkaConsumer
+from .kafka_producer import KafkaProducer
+import requests
+import threading
 
 class WeatherUService(Flask):
-    def __init__(self, api_key, mongo_endpoint, user_conditions_endpoint, city_conditions_endpoint,kafka_producer, kafka_consumer, *args, **kwargs):
-        # Costruttore flask
+    """
+    Servizio meteo.
+
+    Parameters:
+    - api_key: API key per accedere ai dati di OpenWeather.
+    - db_endpoint: URL per la connessione con il DB.
+    - user_conditions_endpoint: Endpoint per recuperare le informazioni sulle citta da aggiornare.
+    - city_conditions_endpoint: Endpoint per recuperare le condizioni relative ad una citta.
+    - args, kwargs: Argomenti per Flask.
+    """
+    def __init__(self, api_key, db_endpoint, user_conditions_endpoint, city_conditions_endpoint, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Config
+        # Configuration
         self.config['API_KEY'] = api_key
         self.config['api'] = "https://api.openweathermap.org/data/2.5/forecast"
         self.config['user_conditions_endpoint'] = user_conditions_endpoint
         self.config['city_conditions_endpoint'] = city_conditions_endpoint
 
-        # Config per connettersi a MongoDB
-        self.config['MONGO_URI'] = mongo_endpoint
+        # MongoDB configuration
+        self.config['MONGO_URI'] = db_endpoint
         self.mongo = PyMongo(self)
         self.collection = self.mongo.db.cities
 
-        # Mapping condizioni
+        # Mapping conditions
         self.type_mapping = {
             "temperatura": "feels_like",
             "umidità": "humidity", 
@@ -33,14 +45,11 @@ class WeatherUService(Flask):
             "speed": "wind",
         }
 
-        # Kafka producer
-        #self.kafka_producer = kafka_producer
-        #self.kafka_producer.produceMessage('users-to-notify-topic', 'city_name', data["city"]["name"])
-
-        # Kafka Consumer
-        #self.kafka_consumer = kafka_consumer
-        #kafka_thread = threading.Thread(target = self.kafka_consumer.consumeMessages)
-        #kafka_thread.start()
+        # Kafka producer and consumer
+        self.kafka_producer = KafkaProducer("PLAINTEXT://kafka:9092")
+        self.kafka_consumer = KafkaConsumer('weather-consumer-group', 'new-city-topic', self.process_message, 'PLAINTEXT://kafka:9092')
+        kafka_thread = threading.Thread(target=self.kafka_consumer.consumeMessages)
+        kafka_thread.start()
 
         # Scheduler
         self.scheduler = APScheduler()
@@ -50,34 +59,71 @@ class WeatherUService(Flask):
         # Routes
         self.route('/force_update', methods=['get'])(self.force_update_handler)
 
+    def process_message(self, message):
+        """
+        Processa un messaggio.
+
+        Parameters:
+        - message: Messaggio ricevuto da Kafka.
+        """
+        print(f"Processing message: {message}")
+
     def _scheduled_update(self):
+        """
+        Schedula l'update delle citta.
+        """
         with self.app_context():
             self._update_saved_cities()
 
     def force_update_handler(self):
+        """
+        Handler per gestire la richiesta force update.
+        """
         if self._update_saved_cities():
-            return jsonify({"message": "operazione avvenuta con successo"})
+            return jsonify({"message": "Operazione avvenuta con successo"})
         else:
             return abort(404)
-    
+
     def _update_saved_cities(self):
+        """
+        Aggiorna i dati meteo per le citta tracciate.
+        """
         cities = self._get_cities_to_update()
         if cities is None:
             return False
         for city in cities:
-            data = self._format_api_data(self._get_weather_data_from_api(city))
-            self._save_weather_data(data)
+            self._update_city(city)
         return True
 
-    # Metodo per ottenere le città delle quali vogliamo conoscere i dati meteo (va sostituito con una lettura sul db)
     def _get_cities_to_update(self):
+        """
+        Recupera le citta tracciate.
+
+        Returns:
+        - Lista delle citta tracciate o None se la richiesta fallisce.
+        """
         response = requests.get(self.config['user_conditions_endpoint'])
         if response.status_code == 200:
             return response.json()
         else:
             return None
 
+    def _update_city(self, city):
+        data = self._format_api_data(self._get_weather_data_from_api(city))
+        if data:
+            self._save_weather_data(data)
+            self._send_notifications(city)
+
     def _get_weather_data_from_api(self, city):
+        """
+        Recupera i dati meteo da OpenWeather per una citta.
+
+        Parameters:
+        - city: Nome della citta.
+
+        Returns:
+        - Dati meteo in formato json o None se la richiesta fallisce.
+        """
         response = requests.get(self.config["api"], {"q": city, "appid": self.config['API_KEY']})
         if response.status_code == 200:
             data = response.json()
@@ -85,50 +131,95 @@ class WeatherUService(Flask):
             return data
         else:
             return None
-        
+
     def _format_api_data(self, data):
+        """
+        Formatta la risposta dell'api.
+
+        Parameters:
+        - data: Dati raw dell'api di openweather.
+
+        Returns:
+        - dati formattati.
+        """
         if not data:
             return None
-        return {"weather_data": data.pop("list")[:8], "city": data.pop("city")}
+        return {"city": data.pop("city"), "weather_data": data.pop("list")[:8]}
 
     def _save_weather_data(self, data):
-        if self._db_read_city_weather_data(data['city']['name']):
+        """
+        Salva i dati meteo sul database.
+
+        Parameters:
+        - data: Dati meteo formattati.
+        """
+        if self._db_read_city_weather_data(data["city"]["name"]):
             self._db_update_city(data)
         else:
             self._db_create_new_city(data)
 
-    # Controllo condizioni per una citta, se soddisfate inserisce l'id dell'utente e un messaggio nella lista di notifiche
+    def _send_notifications(self, city):
+        notifications = self._check_city_conditions(city)
+        for notification in notifications:
+            self.kafka_producer.produce_message('notifications-topic', 'notification', notification)
+
     def _check_city_conditions(self, city):
-        user_conditions_list = requests.get(self.config['city_conditions_endpoint'], {"city": city}).json()[0]
+        """
+        Controlla le condizioni meteo relativi ad una citta e crea una lista di utenti da aggiornare.
+
+        Parameters:
+        - city: Nome della citta.
+
+        Returns:
+        - Lista di notifiche.
+        """
+        user_conditions_list = requests.get(self.config['city_conditions_endpoint'], {"city": city}).json()
         city_weather_data = self._db_read_city_weather_data(city)
-        notifies = []
-        for condition in user_conditions_list['conditions']:
-            type = self.type_mapping[condition["type"]]
+        notifications = []
+        for condition in user_conditions_list[0]['conditions']:
+            type = self.type_mapping[condition["condition_type"]]
             taxonomy = self.taxonomy_mapping[type]
             for city_weather_data_point in city_weather_data:
-                if condition['condition'] == '>' and city_weather_data_point[taxonomy][type] > float(condition['value']):
-                    notifies.append({'user': user_conditions_list['id'], 'message': condition["type"]+" maggiore di "+condition['value']+" a "+ city +" per giorno "+city_weather_data_point["dt_txt"]})
-                elif condition['condition'] == '<' and city_weather_data_point[taxonomy][type] < float(condition['value']):
-                    notifies.append({'user': user_conditions_list['id'], 'message': condition["type"]+" minore di "+condition['value']+" a "+ city +" per giorno "+city_weather_data_point["dt_txt"]})
-        return notifies
+                if condition['operator'] == '>' and city_weather_data_point[taxonomy][type] > float(condition['value']):
+                    notifications.append({'user': user_conditions_list[0]['id'], 'message': f"{condition['condition_type']} maggiore di {condition['value']} a {city} per giorno {city_weather_data_point['dt_txt']}"})
+                elif condition['operator'] == '<' and city_weather_data_point[taxonomy][type] < float(condition['value']):
+                    notifications.append({'user': user_conditions_list[0]['id'], 'message': f"{condition['condition_type']} minore di {condition['value']} a {city} per giorno {city_weather_data_point['dt_txt']}"})
+        return notifications
 
-    # Operazioni CRUD sul db
-    # Create
     def _db_create_new_city(self, data):
+        """
+        Crea una nuova entry nel db.
+
+        Parameters:
+        - data: Dati meteo sulla citta.
+        """
         if not data:
             return False
         self.collection.insert_one(data)
         return True
     
-    # Read
-    def _db_read_city_weather_data(self, city = None):
+    def _db_read_city_weather_data(self, city=None):
+        """
+        Recupera i dati meteo per la citta specificata.
+
+        Parameters:
+        - city: Nome della citta.
+
+        Returns:
+        - Dati meteo della citta.
+        """
         if city is not None:
             data = self.collection.find_one({"city.name": city})
             return data.get("weather_data") if data else None
         return None
-
-    # Update
+    
     def _db_update_city(self, data):
+        """
+        Aggiorna un'entry nel database con i dati meteo.
+
+        Parameters:
+        - data: Dati meteo sulla citta.
+        """
         if not data:
             return False
         self.collection.update_one({"city.name": data["city"]["name"]}, {"$set": {'weather_data': data["weather_data"]}})

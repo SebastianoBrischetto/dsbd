@@ -27,7 +27,7 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_CREATE_TOPICS: "weather-topic:1:1"
+      KAFKA_CREATE_TOPICS: "new-city-topic:1:1,notifications-topic:1:1"
     networks:
       - mynetwork
       
@@ -65,6 +65,8 @@ services:
     container_name: uservice_user
     ports:
       - "5002:5000"
+    depends_on:
+      - kafka
     networks:
       - mynetwork
 
@@ -75,6 +77,8 @@ services:
     container_name: uservice_weather
     ports:
       - "5003:5000"
+    depends_on:
+      - kafka
     networks:
       - mynetwork
     environment:
