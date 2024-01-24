@@ -6,8 +6,8 @@ from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
 class WeatherBot:
     def __init__(self, token_bot, register_endpoint, remove_endpoint):
         self.token = token_bot
-        self.register = register_endpoint
-        self.remove = remove_endpoint
+        self.register_endpoint = register_endpoint
+        self.remove_endpoint = remove_endpoint
 
         logging.basicConfig(
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -28,7 +28,7 @@ class WeatherBot:
         if not data or len(context.args) != 4:
             await context.bot.send_message(chat_id, text="Invalid registration format. Usage: /register <city> <control_type> <condition> <value>")
         else:
-            requests.get(self.register + "register", {'id': chat_id, 'data[]': context.args})
+            requests.get(self.register_endpoint, {'id': chat_id, 'data[]': context.args})
 
     async def removeAction(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id = update.message.from_user.id
@@ -36,7 +36,7 @@ class WeatherBot:
         if not city:
             await context.bot.send_message(chat_id, text="Invalid command format: Specify the city to stop receiving updates.")
         else:
-            requests.get(self.remove + "remove", {'id': chat_id, 'city': context.args})
+            requests.get(self.remove_endpoint, {'id': chat_id, 'city': context.args})
 
     def addCommandHandlers(self):
         start_handler = CommandHandler('start', self.startAction)

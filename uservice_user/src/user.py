@@ -17,9 +17,9 @@ class UserUService(Flask):
 
         # Routes
         self.route('/register', methods=['GET'])(self.register_handler)
-        self.route('/cities', methods=['GET'])(self.get_conditions_handler)
+        self.route('/user_conditions', methods=['GET'])(self.get_conditions_handler)
         self.route('/remove', methods=['GET'])(self.remove_conditions_handler)
-        self.route('/list_user', methods=['GET'])(self.user_conditions_for_city)
+        self.route('/city_conditions', methods=['GET'])(self.user_conditions_for_city)
 
         # Valori supportati per gli argomenti di /register
         self.condition_types = ["temperatura", "umidità", "pressione", "vento"]
@@ -81,20 +81,20 @@ class UserUService(Flask):
         data = self._get_conditions(user_id)
         return jsonify(data)
 
-    def _check_form(self, city, condition_type, condition, value):
+    def _check_form(self, city, condition_type, operator, value):
         """
         Effettua un controllo sui parametri ricevuti per la registrazione.
 
         Parameters:
             - city (str): Nome citta.
             - condition_type (str): Tipo di condizione.
-            - condition (str): Operatore.
+            - operator (str): Operatore.
             - value (str): Valore.
 
         Returns:
             - bool: True se il form e valido, False altrimenti.
         """
-        checks = [self._check_city(city), self._check_condition_type(condition_type), self._check_operator(condition), self._check_value(value)]
+        checks = [self._check_city(city), self._check_condition_type(condition_type), self._check_operator(operator), self._check_value(value)]
         return all(checks)
 
     def _check_city(self, city):
