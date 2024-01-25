@@ -3,6 +3,7 @@ import requests
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
 
+
 class WeatherBot:
     def __init__(self, token_bot, register_endpoint, remove_endpoint):
         self.token = token_bot
