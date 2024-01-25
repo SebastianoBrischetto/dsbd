@@ -4,4 +4,4 @@ global:
 scrape_configs:
   - job_name: 'num-notifications'
     static_configs:
-      - targets: ['uservice_weather:8000']
+      - targets: ['uservice_weather:8000', 'uservice_notifier:8000']
