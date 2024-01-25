@@ -3,18 +3,18 @@ version: '3'
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
-    container_name: weather_report_zookeeper
+    container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "22181:2181"
     networks:
-      - mynetwork
+      - backend
 
   kafka:
     image: confluentinc/cp-kafka:latest
-    container_name: weather_report_kafka
+    container_name: kafka
     depends_on:
       - zookeeper
     ports:
@@ -29,7 +29,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_CREATE_TOPICS: "new-city-topic:1:1,notifications-topic:1:1"
     networks:
-      - mynetwork
+      - backend
       
   proxy:
     build:
@@ -43,7 +43,7 @@ services:
       - uservice_user
       - uservice_weather
     networks:
-      - mynetwork
+      - backend
 
   uservice_client:
     build: 
@@ -53,7 +53,7 @@ services:
     ports:
       - "5001:5000"
     networks:
-      - mynetwork
+      - backend
     environment:
     - REGISTER_USER=http://proxy:80/uservice_client/register
     - REMOVE_USER=http://proxy:80/uservice_client/remove
@@ -68,7 +68,7 @@ services:
     depends_on:
       - kafka
     networks:
-      - mynetwork
+      - backend
 
   uservice_weather:
     build: 
@@ -80,9 +80,21 @@ services:
     depends_on:
       - kafka
     networks:
-      - mynetwork
+      - backend
     environment:
     - CITY_CONDITIONS=http://proxy:80/uservice_client/city_conditions
+
+  uservice_notifier:
+    build: 
+      context: ./uservice_notifier
+      dockerfile: Dockerfile
+    container_name: uservice_notifier
+    ports:
+      - "5004:5000"
+    depends_on:
+      - kafka
+    networks:
+      - backend
 
   mongo_db:
     image: mongo:latest
@@ -96,11 +108,26 @@ services:
     volumes:
       - Mongodb:/data/db
     networks:
-      - mynetwork
+      - backend
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/config.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    depends_on:
+      - uservice_weather
+      - proxy
+    networks:
+      - backend
 
 volumes:
    Mongodb:
 
 networks:
-  mynetwork:
+  backend:
     driver: bridge

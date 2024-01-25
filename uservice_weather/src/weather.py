@@ -3,6 +3,7 @@ from flask_apscheduler import APScheduler
 from flask_pymongo import PyMongo
 from .kafka_consumer import KafkaConsumer
 from .kafka_producer import KafkaProducer
+from prometheus_client import start_http_server, Gauge
 import requests
 import threading
 
@@ -58,6 +59,10 @@ class WeatherUService(Flask):
         # Routes
         self.route('/force_update', methods=['get'])(self.force_update_handler)
 
+        # Prometheus
+        self.num_of_notifications = Gauge('num_of_notifications', 'Total number of writes to Kafka notifications-topic')
+        start_http_server(8000)
+
     def process_message(self, city):
         """
         Processa un messaggio.
@@ -90,15 +95,19 @@ class WeatherUService(Flask):
         cities = self._db_read_cities_names()
         if cities is None:
             return False
+        counter = 0
         for city in cities:
-            self._update_city(city)
+            counter += self._update_city(city)
+        self.num_of_notifications.set(counter)
         return True
 
     def _update_city(self, city):
         data = self._format_api_data(self._get_weather_data_from_api(city))
+        counter = 0
         if data:
             self._save_weather_data(data)
-            self._send_notifications(city)
+            counter += self._send_notifications(city)
+        return counter
 
     def _get_weather_data_from_api(self, city):
         """
@@ -148,6 +157,7 @@ class WeatherUService(Flask):
         notifications = self._check_city_conditions(city)
         for notification in notifications:
             self.kafka_producer.produce_message('notifications-topic', 'notification', notification)
+        return len(notifications)
 
     def _check_city_conditions(self, city):
         """
