@@ -3,7 +3,7 @@ from flask_apscheduler import APScheduler
 from flask_pymongo import PyMongo
 from .kafka_consumer import KafkaConsumer
 from .kafka_producer import KafkaProducer
-from prometheus_client import start_http_server, Gauge
+from prometheus_client import start_http_server, Counter
 import requests
 import threading
 
@@ -57,10 +57,10 @@ class WeatherUService(Flask):
         self.scheduler.start()
 
         # Routes
-        self.route('/force_update', methods=['get'])(self.force_update_handler)
+        self.route('/force_update', methods=['GET'])(self.force_update_handler)
 
         # Prometheus
-        self.num_of_notifications = Gauge('num_of_notifications', 'Total number of writes to Kafka notifications-topic')
+        self.num_of_notifications = Counter('num_of_notifications_sent', 'Total number of writes to Kafka notifications-topic')
         start_http_server(8000)
 
     def process_message(self, city):
@@ -95,19 +95,16 @@ class WeatherUService(Flask):
         cities = self._db_read_cities_names()
         if cities is None:
             return False
-        counter = 0
         for city in cities:
-            counter += self._update_city(city)
-        self.num_of_notifications.set(counter)
+            self._update_city(city)
         return True
 
     def _update_city(self, city):
         data = self._format_api_data(self._get_weather_data_from_api(city))
-        counter = 0
         if data:
             self._save_weather_data(data)
-            counter += self._send_notifications(city)
-        return counter
+            self._send_notifications(city)
+        return
 
     def _get_weather_data_from_api(self, city):
         """
@@ -157,7 +154,8 @@ class WeatherUService(Flask):
         notifications = self._check_city_conditions(city)
         for notification in notifications:
             self.kafka_producer.produce_message('notifications-topic', 'notification', notification)
-        return len(notifications)
+            self.num_of_notifications.inc()
+        return
 
     def _check_city_conditions(self, city):
         """
