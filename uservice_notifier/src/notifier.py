@@ -18,9 +18,7 @@ class NotificationService(Flask):
         await self.bot.send_message(chat_id, text=message)
 
         
-
-    def process_message(self, kafka_message):
-        
+    def process_message(self, kafka_message):        
         kafka_data = json.loads(kafka_message.value().decode('utf-8'))        
         client_id = kafka_data.get('client_id')
         message_text = kafka_data.get('message_text')       
