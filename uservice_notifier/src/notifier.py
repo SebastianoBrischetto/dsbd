@@ -3,6 +3,7 @@ from flask import Flask, jsonify, abort
 from .kafka_consumer import KafkaConsumer
 import threading
 import json
+import requests
 
 class NotificationService(Flask):
     def __init__(self, bot_token):
@@ -20,6 +21,6 @@ class NotificationService(Flask):
         
     def process_message(self, kafka_message):        
         kafka_data = json.loads(kafka_message.value().decode('utf-8'))        
-        client_id = kafka_data.get('client_id')
-        message_text = kafka_data.get('message_text')       
-        self.send_notification(client_id, message_text)
+        client_id = kafka_data.get('chat_id')
+        message_text = kafka_data.get('text')       
+        requests.get("https://api.telegram.org/bot6765515091:AAGSMzDzfw4f5zrrZ3FF8Lzboz5g2uUY9ZE/" + "sendMessage", {client_id, message_text})
