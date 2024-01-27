@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
         - env:
-            - name: BOT_TOKEN
+            - name: API_KEY
               value: 464c00ac0bbe3174a13b4ac72cdae20f
             - name: MONGO_DB
               value: mongodb://root:password@mongo-db:27017/weather_report_db?authSource=admin&authMechanism=SCRAM-SHA-256

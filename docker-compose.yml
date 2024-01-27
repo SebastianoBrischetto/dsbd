@@ -58,7 +58,7 @@ services:
     networks:
       - backend
     environment:
-    - BOT_TOKEN=464c00ac0bbe3174a13b4ac72cdae20f 
+    - BOT_TOKEN=6765515091:AAGSMzDzfw4f5zrrZ3FF8Lzboz5g2uUY9ZE 
     - REGISTER_USER=http://proxy:80/uservice_client/register
     - REMOVE_USER=http://proxy:80/uservice_client/remove
 
@@ -90,7 +90,7 @@ services:
     networks:
       - backend
     environment:
-    - BOT_TOKEN=464c00ac0bbe3174a13b4ac72cdae20f 
+    - API_KEY=464c00ac0bbe3174a13b4ac72cdae20f 
     - MONGO_DB=mongodb://root:password@mongo_db:27017/weather_report_db?authSource=admin&authMechanism=SCRAM-SHA-256
     - CITY_CONDITIONS=http://proxy:80/uservice_client/city_conditions
 
@@ -106,6 +106,8 @@ services:
       - kafka
     networks:
       - backend
+    environment:
+    - BOT_TOKEN=6765515091:AAGSMzDzfw4f5zrrZ3FF8Lzboz5g2uUY9ZE 
 
   mongo_db:
     image: mongo:latest

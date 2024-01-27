@@ -25,6 +25,9 @@ spec:
         io.kompose.service: uservice-notifier
     spec:
       containers:
+        - env:    
+            - name: BOT_TOKEN
+              value: 6765515091:AAGSMzDzfw4f5zrrZ3FF8Lzboz5g2uUY9ZE 
         - image: docker.io/sebastianob/uservice_notifier
           name: uservice-notifier
           ports:
