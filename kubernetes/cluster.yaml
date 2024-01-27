@@ -1,0 +1,30 @@
+  kind: Cluster
+  apiVersion: kind.x-k8s.io/v1alpha4
+  nodes:
+    - role: control-plane
+      labels:
+        custom-label: "control-plane"
+      kubeadmConfigPatches:
+        - |
+          kind: InitConfiguration
+          nodeRegistration:
+            kubeletExtraArgs:
+              node-labels: "ingress-ready=true"
+      extraPortMappings:
+        - containerPort: 80
+          hostPort: 80
+          protocol: TCP
+        - containerPort: 443
+          hostPort: 443
+          protocol: TCP
+        - containerPort: 30001
+          hostPort: 30001
+          protocol: TCP
+    - role: worker
+      labels:
+        custom-label: "worker"
+
+#   kind create cluster --config cluster.yaml
+#   kubectl apply -f backend-networkpolicy.yaml,prometheus-deployment.yaml,uservice-notifier-deployment.yaml,proxy-deployment.yaml,uservice-user-deployment.yaml,kafka-deployment.yaml,sla-manager-deployment.yaml,uservice-weather-deployment.yaml,mongo-db-deployment.yaml,uservice-client-deployment.yaml,zookeeper-deployment.yaml
+#   kubectl delete -f backend-networkpolicy.yaml,prometheus-deployment.yaml,uservice-notifier-deployment.yaml,proxy-deployment.yaml,uservice-user-deployment.yaml,kafka-deployment.yaml,sla-manager-deployment.yaml,uservice-weather-deployment.yaml,mongo-db-deployment.yaml,uservice-client-deployment.yaml,zookeeper-deployment.yaml
+#   kind delete cluster
