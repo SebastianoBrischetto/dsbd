@@ -47,12 +47,13 @@ class UserUService(Flask):
             return abort(400)
 
         data = dict({"id": user_id}, **params)
-        saved_cities = self._db_read_all_users_conditions()
-        if not saved_cities or params["city"] not in saved_cities:
-            self._save_to_db(data)
-            self.kafka_producer.produce_message('new-city-topic', 'city', params["city"])
-        else:
-            self._save_to_db(data)
+        kafka_data = dict({"user_id": user_id}, **params)
+        #saved_cities = self._db_read_all_users_conditions()
+        #if not saved_cities or params["city"] not in saved_cities:
+        self._save_to_db(data)
+        self.kafka_producer.produce_message('new-city-topic', 'city', kafka_data)
+        #else:
+            #self._save_to_db(data)
         return jsonify(data)
 
     def _save_to_db(self, data):

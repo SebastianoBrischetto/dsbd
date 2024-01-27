@@ -6,6 +6,7 @@ from .kafka_producer import KafkaProducer
 from prometheus_client import start_http_server, Counter
 import requests
 import threading
+import json
 
 class WeatherUService(Flask):
     """
@@ -30,6 +31,7 @@ class WeatherUService(Flask):
         self.config['MONGO_URI'] = db_endpoint
         self.mongo = PyMongo(self)
         self.collection = self.mongo.db.cities
+        self.users_collection = self.mongo.db.users_copy
 
         # Mapping conditions
         self.type_mapping = {
@@ -63,14 +65,18 @@ class WeatherUService(Flask):
         self.num_of_notifications = Counter('num_of_notifications_sent', 'Total number of writes to Kafka notifications-topic')
         start_http_server(8000)
 
-    def process_message(self, city):
+    def process_message(self, kafka_data):
         """
         Processa un messaggio.
 
         Parameters:
         - city: Nome citta ricevuto da Kafka.
         """
+        user_condition = json.loads(kafka_data)
+        city = user_condition.get('city')
+        self._save_user_data(user_condition)
         self._update_city(city)
+
 
     def _scheduled_update(self):
         """
@@ -150,6 +156,16 @@ class WeatherUService(Flask):
         else:
             self._db_create_new_city(data)
 
+    def _save_user_data(self, data):
+        """
+        Salva i dati utente sul database.
+
+        Parameters:
+        - data: Dati utente.
+        """
+        if self._db_read_city_user_data(data.get("user_id"), data.get("city")) is None:
+            self._db_create_user(data)
+
     def _send_notifications(self, city):
         notifications = self._check_city_conditions(city)
         for notification in notifications:
@@ -167,17 +183,23 @@ class WeatherUService(Flask):
         Returns:
         - Lista di notifiche.
         """
-        user_conditions_list = requests.get(self.config['city_conditions_endpoint'], {"city": city}).json()
+        user_conditions_list = []
+        results = self.users_collection.find({'city': city})
+        if results is None:
+            return
+
         city_weather_data = self._db_read_city_weather_data(city)
         notifications = []
-        for condition in user_conditions_list[0]['conditions']:
+        for result in results:
+            user_conditions_list.append(result)
+        for condition in user_conditions_list:
             type = self.type_mapping[condition["condition_type"]]
             taxonomy = self.taxonomy_mapping[type]
             for city_weather_data_point in city_weather_data:
                 if condition['operator'] == '>' and city_weather_data_point[taxonomy][type] > float(condition['value']):
-                    notifications.append({'user': user_conditions_list[0]['id'], 'message': f"{condition['condition_type']} maggiore di {condition['value']} a {city} per giorno {city_weather_data_point['dt_txt']}"})
+                    notifications.append({'user': condition['user_id'], 'message': f"{condition['condition_type']} maggiore di {condition['value']} a {city} per giorno {city_weather_data_point['dt_txt']}"})
                 elif condition['operator'] == '<' and city_weather_data_point[taxonomy][type] < float(condition['value']):
-                    notifications.append({'user': user_conditions_list[0]['id'], 'message': f"{condition['condition_type']} minore di {condition['value']} a {city} per giorno {city_weather_data_point['dt_txt']}"})
+                    notifications.append({'user': condition['user_id'], 'message': f"{condition['condition_type']} minore di {condition['value']} a {city} per giorno {city_weather_data_point['dt_txt']}"})
         return notifications
 
     def _db_create_new_city(self, data):
@@ -191,7 +213,19 @@ class WeatherUService(Flask):
             return False
         self.collection.insert_one(data)
         return True
-    
+
+    def _db_create_user(self, data):
+        """
+        Crea un nuovo utente nel database.
+
+        Parameters:
+            - data (dict): Dati utente da salvare.
+        """
+        if not data:
+            return False
+        self.users_collection.insert_one(data)
+        return True
+
     def _db_read_city_weather_data(self, city=None):
         """
         Recupera i dati meteo per la citta specificata.
@@ -204,6 +238,21 @@ class WeatherUService(Flask):
         """
         if city is not None:
             data = self.collection.find_one({"city.name": city})
+            return data.get("weather_data") if data else None
+        return None
+
+    def _db_read_city_user_data(self, user_id, city):
+        """
+        Recupera i dati meteo per la citta specificata.
+
+        Parameters:
+        - city: Nome della citta.
+
+        Returns:
+        - Dati utente per quella citta.
+        """
+        if city is not None:
+            data = self.users_collection.find_one({"user_id": user_id, "city": city})
             return data.get("weather_data") if data else None
         return None
     

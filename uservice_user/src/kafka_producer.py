@@ -1,7 +1,7 @@
 from confluent_kafka import Producer
 import time
 import logging
-
+import json
 class KafkaProducer:
     def __init__(self, bootstrap_servers="PLAINTEXT://kafka:9092"):
         """
@@ -70,5 +70,5 @@ class KafkaProducer:
         - key: Chiave della coppia key-value.
         - value: Valore della coppia key-value.
         """
-        self.producer.produce(topic, key=key, value=value, callback=self.delivery_report)
+        self.producer.produce(topic, key=key, value=json.dumps(value), callback=self.delivery_report)
         self.producer.flush()
