@@ -27,7 +27,7 @@ spec:
       containers:
         - env:    
             - name: BOT_TOKEN
-              value: 464c00ac0bbe3174a13b4ac72cdae20f 
+              value: 6765515091:AAGSMzDzfw4f5zrrZ3FF8Lzboz5g2uUY9ZE 
             - name: REGISTER_USER
               value: http://proxy:80/uservice_client/register
             - name: REMOVE_USER

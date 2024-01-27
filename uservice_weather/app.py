@@ -3,7 +3,7 @@ import os
 
 #kafka_producer = KafkaProducer("PLAINTEXT://kafka:9092")
 app = WeatherUService(
-    os.environ.get('BOT_TOKEN'),
+    os.environ.get('API_KEY'),
     os.environ.get('MONGO_DB'),
     os.environ.get('CITY_CONDITIONS'),
     __name__
