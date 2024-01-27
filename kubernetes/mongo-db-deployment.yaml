@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: mongo-db
+  name: mongo-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: mongo-db
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/backend: "true"
+        io.kompose.service: mongo-db
+    spec:
+      containers:
+        - env:
+            - name: MONGO_INITDB_DATABASE
+              value: weather_report_db
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: password
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: root
+          image: mongo:latest
+          name: mongo-db
+          ports:
+            - containerPort: 27017
+          resources: {}
+          volumeMounts:
+            - mountPath: /data/db
+              name: mongodb
+      restartPolicy: Always
+      volumes:
+        - name: mongodb
+          persistentVolumeClaim:
+            claimName: mongodb
+status: {}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: mongo-db
+  name: mongo-db
+spec:
+  ports:
+    - name: "27017"
+      port: 27017
+      targetPort: 27017
+  selector:
+    io.kompose.service: mongo-db
+status:
+  loadBalancer: {}
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: mongodb
+  name: mongodb
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}

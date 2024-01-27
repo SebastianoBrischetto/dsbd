@@ -63,20 +63,19 @@ class KafkaConsumer:
         try:
             while True:
                 message = self.consumer.poll(1.0)
-                if message is not None:
-                    if message.error():
-                        self.logger.error(f'Error: {message.error()}')
-                    else:
-                        decoded_message = message.value().decode("utf-8")
-                        self.logger.info(f'Starting to process message: {decoded_message}')
-                        
-                        # Execute the callback function with the decoded message
-                        self.on_message_callback(decoded_message)
-                        
-                        self.logger.info('Message processed, committing offset.')
-                        
-                        # Manually commit offsets
-                        self.consumer.commit()
+                if not message:
+                    continue
+                if message.error():
+                    self.logger.error(f'Error: {message.error()}')
+                else:
+                    decoded_message = message.value().decode("utf-8")
+                    self.logger.info(f'Starting to process message: {decoded_message}')
+                    
+                    self.on_message_callback(decoded_message)
+                    
+                    self.logger.info('Message processed, committing offset.')
+                    
+                    self.consumer.commit()
         except KeyboardInterrupt:
             pass
         finally:

@@ -8,7 +8,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     ports:
-      - "22181:2181"
+      - "2181:2181"
     networks:
       - backend
 
@@ -35,6 +35,7 @@ services:
     build:
       context: ./proxy
       dockerfile: Dockerfile
+    image: sebastianob/proxy
     container_name: proxy
     ports:
       - "5000:80"
@@ -42,6 +43,7 @@ services:
       - uservice_client
       - uservice_user
       - uservice_weather
+      - prometheus
     networks:
       - backend
 
@@ -49,12 +51,14 @@ services:
     build: 
       context: ./uservice_client/telegram_bot
       dockerfile: Dockerfile
+    image: sebastianob/uservice_client
     container_name: uservice_client
     ports:
       - "5001:5000"
     networks:
       - backend
     environment:
+    - BOT_TOKEN=464c00ac0bbe3174a13b4ac72cdae20f 
     - REGISTER_USER=http://proxy:80/uservice_client/register
     - REMOVE_USER=http://proxy:80/uservice_client/remove
 
@@ -62,6 +66,7 @@ services:
     build: 
       context: ./uservice_user
       dockerfile: Dockerfile
+    image: sebastianob/uservice_user
     container_name: uservice_user
     ports:
       - "5002:5000"
@@ -69,11 +74,14 @@ services:
       - kafka
     networks:
       - backend
+    environment:
+      - MONGO_DB=mongodb://root:password@mongo_db:27017/weather_report_db?authSource=admin&authMechanism=SCRAM-SHA-256
 
   uservice_weather:
     build: 
       context: ./uservice_weather
       dockerfile: Dockerfile
+    image: sebastianob/uservice_weather
     container_name: uservice_weather
     ports:
       - "5003:5000"
@@ -82,12 +90,15 @@ services:
     networks:
       - backend
     environment:
+    - BOT_TOKEN=464c00ac0bbe3174a13b4ac72cdae20f 
+    - MONGO_DB=mongodb://root:password@mongo_db:27017/weather_report_db?authSource=admin&authMechanism=SCRAM-SHA-256
     - CITY_CONDITIONS=http://proxy:80/uservice_client/city_conditions
 
   uservice_notifier:
     build: 
       context: ./uservice_notifier
       dockerfile: Dockerfile
+    image: sebastianob/uservice_notifier
     container_name: uservice_notifier
     ports:
       - "5004:5000"
@@ -114,16 +125,32 @@ services:
     image: prom/prometheus:latest
     container_name: prometheus
     ports:
-      - "9090:9090"
+      - "5005:9090"
     volumes:
       - ./prometheus/config.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/rules/rule.yml:/etc/prometheus/rules/rule.yml
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
     depends_on:
       - uservice_weather
-      - proxy
     networks:
       - backend
+
+  sla_manager:
+    build: 
+      context: ./sla_manager
+      dockerfile: Dockerfile
+    image: sebastianob/sla_manager
+    container_name: sla_manager
+    ports:
+      - "5006:5000"
+    depends_on:
+      - prometheus
+    networks:
+      - backend
+    environment:
+    - MONGO_DB=mongodb://root:password@mongo_db:27017/weather_report_db?authSource=admin&authMechanism=SCRAM-SHA-256
+    - METRICS=http://proxy:80/metrics
 
 volumes:
    Mongodb:

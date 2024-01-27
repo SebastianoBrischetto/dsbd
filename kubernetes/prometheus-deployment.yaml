@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:latest
+        ports:
+        - containerPort: 9090
+        volumeMounts:
+        - name: prometheus-config
+          mountPath: /etc/prometheus
+      volumes:
+      - name: prometheus-config
+        configMap:
+          name: prometheus-config
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+spec:
+  selector:
+    app: prometheus
+  ports:
+    - protocol: TCP
+      port: 9090
+      targetPort: 9090
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 10s
+    rule_files:
+      - "/etc/prometheus/rule.yml"
+
+    scrape_configs:
+      - job_name: 'num-notifications'
+        static_configs:
+          - targets: ['uservice_weather:8000', 'uservice_notifier:8000']
+
+  rule.yml: |
+    groups:
+    - name: 'notifications_rules'
+      interval: 10s
+      rules:
+      - record: notifications_difference
+        expr: sum(num_of_notifications_sent_total) - sum(num_of_notifications_received_total)
+
+
+--- 
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: prometheus-claim1
+  name: prometheus-claim1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}

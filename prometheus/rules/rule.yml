@@ -1,0 +1,6 @@
+groups:
+  - name: 'notifications_rules'
+    interval: 10s
+    rules:
+    - record: notifications_difference
+      expr: sum(num_of_notifications_sent_total) - sum(num_of_notifications_received_total)
