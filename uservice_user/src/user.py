@@ -41,19 +41,15 @@ class UserUService(Flask):
         data = request.args.getlist('data[]')
         if user_id is None or not data:
             return abort(400)
-        
+
         params = {"city": data[0].lower(), "condition_type": data[1], "operator": data[2], "value": data[3]}
         if not self._check_form(**params):
             return abort(400)
 
         data = dict({"id": user_id}, **params)
-        kafka_data = dict({"user_id": user_id}, **params)
-        #saved_cities = self._db_read_all_users_conditions()
-        #if not saved_cities or params["city"] not in saved_cities:
+        kafka_data = dict({"is_remove": False, "user_id": user_id}, **params)
         self._save_to_db(data)
         self.kafka_producer.produce_message('new-city-topic', 'city', kafka_data)
-        #else:
-            #self._save_to_db(data)
         return jsonify(data)
 
     def _save_to_db(self, data):
@@ -156,9 +152,13 @@ class UserUService(Flask):
 
         if user_id is None:
             return abort(400)
-        
-        params = {"id": user_id, "city": city}
-        return jsonify(params) if self._db_remove_user_conditions_for_city(**params) else abort(400)
+
+        if self._db_remove_user_conditions_for_city(user_id, city):
+            kafka_data = dict({"is_remove": True, "user_id": user_id, "city": city})
+            self.kafka_producer.produce_message('new-city-topic', 'city', kafka_data)
+            return jsonify(kafka_data)
+        else:
+            return abort(400)
 
     def user_conditions_for_city(self):
         """
