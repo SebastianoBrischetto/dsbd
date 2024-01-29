@@ -70,12 +70,15 @@ class WeatherUService(Flask):
         Processa un messaggio.
 
         Parameters:
-        - city: Nome citta ricevuto da Kafka.
+        - kafka_data: Condizione ricevuta da Kafka.
         """
-        user_condition = json.loads(kafka_data)
-        city = user_condition.get('city')
-        self._save_user_data(user_condition)
-        self._update_city(city)
+        data = json.loads(kafka_data)
+        is_remove = data.pop("is_remove", None)
+        if is_remove:
+            self._remove_condition_data(data)
+        else:
+            self._save_user_data(data)
+            self._update_city(data.get('city'))
 
 
     def _scheduled_update(self):
@@ -111,6 +114,12 @@ class WeatherUService(Flask):
             self._save_weather_data(data)
             self._send_notifications(city)
         return
+
+    def _remove_condition_data(self, data):
+        result = self.users_collection.delete_many(data)
+        return result.acknowledged if result else False
+
+
 
     def _get_weather_data_from_api(self, city):
         """
@@ -163,7 +172,7 @@ class WeatherUService(Flask):
         Parameters:
         - data: Dati utente.
         """
-        if self._db_read_city_user_data(data.get("user_id"), data.get("city")) is None:
+        if self._db_read_city_user_data(data) is None:
             self._db_create_user(data)
 
     def _send_notifications(self, city):
@@ -195,10 +204,14 @@ class WeatherUService(Flask):
         for condition in user_conditions_list:
             type = self.type_mapping[condition["condition_type"]]
             taxonomy = self.taxonomy_mapping[type]
+            if condition['condition_type'] == "temperatura":
+                value = float(condition['value']) + 273.15
+            else:
+                value = condition['value']
             for city_weather_data_point in city_weather_data:
-                if condition['operator'] == '>' and city_weather_data_point[taxonomy][type] > float(condition['value']):
+                if condition['operator'] == '>' and city_weather_data_point[taxonomy][type] > float(value):
                     notifications.append({'user': condition['user_id'], 'message': f"{condition['condition_type']} maggiore di {condition['value']} a {city} per giorno {city_weather_data_point['dt_txt']}"})
-                elif condition['operator'] == '<' and city_weather_data_point[taxonomy][type] < float(condition['value']):
+                elif condition['operator'] == '<' and city_weather_data_point[taxonomy][type] < float(value):
                     notifications.append({'user': condition['user_id'], 'message': f"{condition['condition_type']} minore di {condition['value']} a {city} per giorno {city_weather_data_point['dt_txt']}"})
         return notifications
 
@@ -241,9 +254,9 @@ class WeatherUService(Flask):
             return data.get("weather_data") if data else None
         return None
 
-    def _db_read_city_user_data(self, user_id, city):
+    def _db_read_city_user_data(self, user_data):
         """
-        Recupera i dati meteo per la citta specificata.
+        Recupera i dati utente con la citta specificata.
 
         Parameters:
         - city: Nome della citta.
@@ -251,9 +264,9 @@ class WeatherUService(Flask):
         Returns:
         - Dati utente per quella citta.
         """
-        if city is not None:
-            data = self.users_collection.find_one({"user_id": user_id, "city": city})
-            return data.get("weather_data") if data else None
+        if user_data is not None:
+            data = self.users_collection.find_one(user_data)
+            return data if data else None
         return None
     
     def _db_update_city(self, data):
