@@ -109,10 +109,15 @@ class WeatherUService(Flask):
         return True
 
     def _update_city(self, city):
-        data = self._format_api_data(self._get_weather_data_from_api(city))
-        if data:
-            self._save_weather_data(data)
+        city_weather_data = self._db_read_city_weather_data(city)
+
+        if city_weather_data:
             self._send_notifications(city)
+        else:
+            data = self._format_api_data(self._get_weather_data_from_api(city))
+            if data:
+                self._save_weather_data(data)
+                self._send_notifications(city)
 
     def _remove_condition_data(self, data):
         result = self.users_collection.delete_many(data)
