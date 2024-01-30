@@ -30,8 +30,8 @@ spec:
               value: 464c00ac0bbe3174a13b4ac72cdae20f
             - name: MONGO_DB
               value: mongodb://root:password@mongo-db:27017/weather_report_db?authSource=admin&authMechanism=SCRAM-SHA-256
-            - name: CITY_CONDITIONS
-              value: http://proxy:80/uservice_client/city_conditions
+            - name: UPDATE_INTERVAL
+              value: "3"
           image: docker.io/sebastianob/uservice_weather
           name: uservice-weather
           ports:

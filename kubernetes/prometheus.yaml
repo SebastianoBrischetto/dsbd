@@ -65,7 +65,6 @@ data:
       - record: notifications_difference
         expr: sum(num_of_notifications_sent_total) - sum(num_of_notifications_received_total)
 
-
 --- 
 
 apiVersion: v1

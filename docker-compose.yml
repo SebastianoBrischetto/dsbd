@@ -92,7 +92,7 @@ services:
     environment:
     - API_KEY=464c00ac0bbe3174a13b4ac72cdae20f 
     - MONGO_DB=mongodb://root:password@mongo_db:27017/weather_report_db?authSource=admin&authMechanism=SCRAM-SHA-256
-    - CITY_CONDITIONS=http://proxy:80/uservice_client/city_conditions
+    - UPDATE_INTERVAL=3
 
   uservice_notifier:
     build: 
