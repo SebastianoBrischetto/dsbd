@@ -25,6 +25,8 @@
         custom-label: "worker"
 
 #   kind create cluster --config cluster.yaml
-#   kubectl apply -f backend-networkpolicy.yaml,prometheus-deployment.yaml,uservice-notifier-deployment.yaml,proxy-deployment.yaml,uservice-user-deployment.yaml,kafka-deployment.yaml,sla-manager-deployment.yaml,uservice-weather-deployment.yaml,mongo-db-deployment.yaml,uservice-client-deployment.yaml,zookeeper-deployment.yaml
-#   kubectl delete -f backend-networkpolicy.yaml,prometheus-deployment.yaml,uservice-notifier-deployment.yaml,proxy-deployment.yaml,uservice-user-deployment.yaml,kafka-deployment.yaml,sla-manager-deployment.yaml,uservice-weather-deployment.yaml,mongo-db-deployment.yaml,uservice-client-deployment.yaml,zookeeper-deployment.yaml
+#   kubectl apply -f zookeeper.yaml,backend-networkpolicy.yaml,kafka.yaml,mongo-db.yaml,uservice-client.yaml,uservice-user.yaml,uservice-weather.yaml,uservice-notifier.yaml,proxy.yaml,prometheus.yaml,sla-manager.yaml
+#   kubectl apply -f zookeeper.yaml,backend-networkpolicy.yaml
+#   kubectl apply -f kafka.yaml,mongo-db.yaml,uservice-client.yaml,uservice-user.yaml,uservice-weather.yaml,uservice-notifier.yaml,proxy.yaml,prometheus.yaml,sla-manager.yaml
+#   kubectl delete -f zookeeper.yaml,backend-networkpolicy.yaml,kafka.yaml,mongo-db.yaml,uservice-client.yaml,uservice-user.yaml,uservice-weather.yaml,uservice-notifier.yaml,proxy.yaml,prometheus.yaml,sla-manager.yaml
 #   kind delete cluster

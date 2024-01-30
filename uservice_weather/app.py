@@ -5,7 +5,7 @@ import os
 app = WeatherUService(
     os.environ.get('API_KEY'),
     os.environ.get('MONGO_DB'),
-    os.environ.get('CITY_CONDITIONS'),
+    os.environ.get('UPDATE_INTERVAL'),
     __name__
 )
 

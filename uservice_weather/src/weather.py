@@ -16,16 +16,16 @@ class WeatherUService(Flask):
     - api_key: API key per accedere ai dati di OpenWeather.
     - db_endpoint: URL per la connessione con il DB.
     - user_conditions_endpoint: Endpoint per recuperare le informazioni sulle citta da aggiornare.
-    - city_conditions_endpoint: Endpoint per recuperare le condizioni relative ad una citta.
+    - update_interval: Intervallo di tempo tra gli update delle condizioni meteo.
     - args, kwargs: Argomenti per Flask.
     """
-    def __init__(self, api_key, db_endpoint, city_conditions_endpoint, *args, **kwargs):
+    def __init__(self, api_key, db_endpoint, update_interval, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Configuration
         self.config['API_KEY'] = api_key
         self.config['api'] = "https://api.openweathermap.org/data/2.5/forecast"
-        self.config['city_conditions_endpoint'] = city_conditions_endpoint
+        self.config['update_interval'] = int(update_interval)
 
         # MongoDB configuration
         self.config['MONGO_URI'] = db_endpoint
@@ -55,7 +55,7 @@ class WeatherUService(Flask):
 
         # Scheduler
         self.scheduler = APScheduler()
-        self.scheduler.add_job(id="scheduled_update", func=self._scheduled_update, trigger='interval', hours=3)
+        self.scheduler.add_job(id="scheduled_update", func=self._scheduled_update, trigger='interval', hours=self.config['update_interval'])
         self.scheduler.start()
 
         # Routes
@@ -113,7 +113,12 @@ class WeatherUService(Flask):
         if data:
             self._save_weather_data(data)
             self._send_notifications(city)
-        return
+
+    def _remove_condition_data(self, data):
+        result = self.users_collection.delete_many(data)
+        return result.acknowledged if result else False
+
+
 
     def _remove_condition_data(self, data):
         result = self.users_collection.delete_many(data)
@@ -196,7 +201,6 @@ class WeatherUService(Flask):
         results = self.users_collection.find({'city': city})
         if results is None:
             return
-
         city_weather_data = self._db_read_city_weather_data(city)
         notifications = []
         for result in results:
@@ -211,8 +215,10 @@ class WeatherUService(Flask):
             for city_weather_data_point in city_weather_data:
                 if condition['operator'] == '>' and city_weather_data_point[taxonomy][type] > float(value):
                     notifications.append({'user': condition['user_id'], 'message': f"{condition['condition_type']} maggiore di {condition['value']} a {city} per giorno {city_weather_data_point['dt_txt']}"})
-                elif condition['operator'] == '<' and city_weather_data_point[taxonomy][type] < float(value):
+                    break
+                elif condition['operator'] == '<' and city_weather_data_point[taxonomy][type] < float(condition['value']):
                     notifications.append({'user': condition['user_id'], 'message': f"{condition['condition_type']} minore di {condition['value']} a {city} per giorno {city_weather_data_point['dt_txt']}"})
+                    break
         return notifications
 
     def _db_create_new_city(self, data):
