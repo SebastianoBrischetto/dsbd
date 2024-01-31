@@ -9,12 +9,12 @@ class SlaManager(Flask):
     def __init__(self, mongo_endpoint, metrics_endpoint, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.route('/sla', methods=['PUT'])(self.create_update_sla)
-        self.route('/sla', methods=['GET'])(self.query_sla)
-        self.route('/sla', methods=['DELETE'])(self.remove_sla)
+        self.route('/save_SLA', methods=['PUT'])(self.create_update_sla)
+        self.route('/is_violated', methods=['GET'])(self.query_sla)
+        self.route('/delete_SLA', methods=['DELETE'])(self.remove_sla)
         self.route('/violations', methods=['GET'])(self.query_violations)
         self.route('/reevaluate_model', methods=['POST'])(self.reevaluate_model_endpoint)
-        self.route('/probability', methods=['GET'])(self.query_probability)
+        self.route('/get_probability', methods=['GET'])(self.query_probability)
 
         self.config['metrics_endpoint'] = metrics_endpoint
 
